@@ -147,13 +147,13 @@ const KonvaCanvas = () => {
       />
 
       <div className="flex space-x-4 mb-4">
-        <button onClick={addRectangle} className="bg-violet-400 text-white p-2 rounded">
+        <button onClick={addRectangle} className="bg-gradient-to-r from-violet-400 to-violet-500 text-white p-2 rounded">
           Add Rectangle
         </button>
-        <button onClick={addCircle} className="bg-blue-400 text-white p-2 rounded">
+        <button onClick={addCircle} className="bg-gradient-to-r from-cyan-400 to-blue-400  text-white p-2 rounded">
           Add Circle
         </button>
-        <button onClick={addText} className="bg-green-400 text-white p-2 rounded">
+        <button onClick={addText} className="bg-gradient-to-r from-green-400 to-green-500 text-white p-2 rounded">
           Add Text
         </button>
         <button
@@ -186,8 +186,8 @@ const KonvaCanvas = () => {
           {image && (
             <Image
               image={image}
-              x={50}
-              y={50}
+              x={(window.innerWidth - image.width * 0.5) / 2} // Centers the image horizontally
+              y={(window.innerHeight - image.height * 0.5) / 2} // Centers the image vertically
               width={image.width * 0.5}
               height={image.height * 0.5}
             />

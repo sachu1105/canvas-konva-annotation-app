@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ChromePicker } from "react-color"; // Import the color picker
+import Sidebar from "./Sidebar";
 import {
   Stage,
   Layer,
@@ -12,14 +12,6 @@ import {
   Star,
   Line,
 } from "react-konva";
-import {
-  FaFont,
-  FaTrashAlt,
-  FaSave,
-  FaDownload,
-  FaPlus,
-  FaMinus,
-} from "react-icons/fa"; // Import icons from react-icons
 
 const KonvaCanvas = () => {
   const [imageUrl, setImageUrl] = useState(null); // Stores the uploaded image URL
@@ -27,6 +19,9 @@ const KonvaCanvas = () => {
   const [objects, setObjects] = useState([]); // Stores the list of added objects (shapes, text)
   const [selectedObjectId, setSelectedObjectId] = useState(null); // Tracks the currently selected object
   const [textEditing, setTextEditing] = useState({ id: null, value: "" }); // Tracks text being edited
+  const [textType, setTextType] = useState("p"); // Default to <p>
+  const [textSize, setTextSize] = useState(20); // Default font size
+  const [texts, setTexts] = useState([]); // Store the texts
   const [recentlySaved, setRecentlySaved] = useState([]); // Tracks saved canvases
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 }); //canvas size
   const [selectedShape, setSelectedShape] = useState("");
@@ -43,20 +38,16 @@ const KonvaCanvas = () => {
       img.onload = () => {
         setImage(img);
       };
+    } else {
+      setImage(null); // Ensure the image is cleared from state
     }
   }, [imageUrl]);
 
-  // Effect to attach the transformer to the selected object
-  useEffect(() => {
-    if (transformerRef.current && selectedObjectId !== null) {
-      const selectedNode = objects.find((obj) => obj.id === selectedObjectId)
-        ?.ref.current;
-      if (selectedNode) {
-        transformerRef.current.nodes([selectedNode]);
-        transformerRef.current.getLayer().batchDraw();
-      }
-    }
-  }, [selectedObjectId, objects]);
+  // Remove the main image
+  const handleRemoveMainImage = () => {
+    setImageUrl(null);
+    localStorage.removeItem("imageUrl"); // Clears the image URL from localStorage
+  };
 
   // Handle file upload and set the image URL
   const handleImageUpload = (e) => {
@@ -69,6 +60,18 @@ const KonvaCanvas = () => {
       reader.readAsDataURL(file);
     }
   };
+
+  // Effect to attach the transformer to the selected object
+  useEffect(() => {
+    if (transformerRef.current && selectedObjectId !== null) {
+      const selectedNode = objects.find((obj) => obj.id === selectedObjectId)
+        ?.ref.current;
+      if (selectedNode) {
+        transformerRef.current.nodes([selectedNode]);
+        transformerRef.current.getLayer().batchDraw();
+      }
+    }
+  }, [selectedObjectId, objects]);
 
   const addRectangle = () => {
     const id = Date.now(); // Unique ID for the rectangle
@@ -176,28 +179,6 @@ const KonvaCanvas = () => {
     ]);
   };
 
-  // Function to add a text object to the canvas
-  const addText = () => {
-    const id = Date.now(); // Unique ID for the text
-    const textRef = React.createRef(); // Reference for the text
-    setObjects((prevObjects) => [
-      ...prevObjects,
-      {
-        id,
-        type: "text",
-        ref: textRef,
-        attrs: {
-          x: 300,
-          y: 300,
-          text: "Double-click to edit",
-          fontSize: 20,
-          draggable: true,
-          fill: selectedColor, // Apply selected color
-        },
-      },
-    ]);
-  };
-
   const handleOverlayImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -249,10 +230,13 @@ const KonvaCanvas = () => {
   // Function to delete the selected object
   const deleteAnnotation = () => {
     if (selectedObjectId !== null) {
-      // Delete the selected object
-      setObjects((prevObjects) =>
-        prevObjects.filter((obj) => obj.id !== selectedObjectId)
-      );
+      // Delete the selected object from the state
+      setObjects((prevObjects) => {
+        const updatedObjects = prevObjects.filter(
+          (obj) => obj.id !== selectedObjectId
+        );
+        return updatedObjects;
+      });
 
       // Reset the selected object ID (this clears the Transformer)
       setSelectedObjectId(null);
@@ -272,28 +256,7 @@ const KonvaCanvas = () => {
     setTextEditing({ id: null, value: "" }); // Reset text editing
   };
 
-  // Handle double-clicking on text to enable editing
-  const handleTextDblClick = (id, text) => {
-    setTextEditing({ id, value: text });
-    setSelectedObjectId(id); // Ensure the text remains selected
-  };
 
-  // Handle text input change during editing
-  const handleTextChange = (e) => {
-    setTextEditing({ ...textEditing, value: e.target.value });
-  };
-
-  // Save the edited text and update the object
-  const handleTextSubmit = () => {
-    setObjects((prevObjects) =>
-      prevObjects.map((obj) =>
-        obj.id === textEditing.id
-          ? { ...obj, attrs: { ...obj.attrs, text: textEditing.value } }
-          : obj
-      )
-    );
-    setTextEditing({ id: null, value: "" }); // End text editing
-  };
 
   const downloadCanvas = () => {
     const uri = stageRef.current.toDataURL();
@@ -330,164 +293,145 @@ const KonvaCanvas = () => {
     }
   };
 
+  //text logic start from here ------------>
+  // Function to add a text object to the canvas
+  const addText = () => {
+    const id = Date.now(); // Unique ID for the text
+    const textRef = React.createRef(); // Reference for the text
+  
+    const calculateFontSize = (text, maxWidth, baseFontSize) => {
+      const context = document.createElement("canvas").getContext("2d");
+      let fontSize = baseFontSize; // Start with the base font size
+      context.font = `${fontSize}px Arial`;
+      while (context.measureText(text).width > maxWidth && fontSize > 0) {
+        fontSize -= 1;
+        context.font = `${fontSize}px Arial`;
+      }
+      return fontSize;
+    };
+  
+    const maxWidth = 300; // Set your desired maximum width here
+  
+    // Font sizes for different text types
+    const textSizes = {
+      h1: 32,
+      h2: 28,
+      h3: 24,
+      h4: 20,
+      h5: 18,
+      h6: 16,
+      p: 14,
+    };
+
+const baseFontSize = textSizes[textType] || 16; // Default to 16px if textType is not set
+
+  setObjects((prevObjects) => [
+    ...prevObjects,
+    {
+      id,
+      type: "text",
+      ref: textRef,
+      attrs: {
+        x: 300,
+        y: 300,
+        text: "Double-click to edit", // Initial text
+        fontSize: calculateFontSize("Double-click to edit", maxWidth, baseFontSize), // Set font size
+        fontFamily: "Arial", // Optional: Set font family
+        fontStyle: textType === "h1" ? "bold" : "normal", // Optional: Bold for h1
+        draggable: true,
+        fill: "#000000", // Apply selected color
+        width: maxWidth, // Set initial width
+        wrap: 'word', // Enable word wrapping
+      },
+    },
+  ]);
+};
+
+  // Update text after editing
+  const handleTextChange = (e) => {
+    setTextEditing((prev) => ({ ...prev, value: e.target.value })); // Update value while editing
+  };
+
+  // Save the edited text and update the object
+  const handleTextSubmit = () => {
+    // Update the text in the list of texts
+    const updatedTexts = texts.map((text) =>
+      text.id === textEditing.id ? { ...text, value: textEditing.value } : text
+    );
+    setTexts(updatedTexts);
+    setTextEditing(null); // Reset editing state
+  };
+
+  // Deselect object when clicking outside
+  const handleStageClick = (e) => {
+    if (e.target === e.target.getStage()) {
+      setSelectedObjectId(null); // Deselect if clicking outside shapes
+      setTextEditing({ id: null, value: "" }); // Stop editing text
+    }
+  };
+
+  // Handle double-clicking on a text object to edit
+  const handleTextDoubleClick = (id) => {
+    const selectedText = objects.find(
+      (obj) => obj.id === id && obj.type === "text"
+    );
+    if (selectedText) {
+      setTextEditing({
+        id,
+        value: selectedText.attrs.text,
+        x: selectedText.attrs.x,
+        y: selectedText.attrs.y,
+        fontSize: selectedText.attrs.fontSize,
+        fontFamily: selectedText.attrs.fontFamily,
+        color: selectedText.attrs.fill,
+      }); // Set the current text and position for editing
+    }
+  };
+
+  const saveEditedText = () => {
+    if (textEditing.id) {
+      setObjects((prevObjects) =>
+        prevObjects.map((obj) => {
+          if (obj.id === textEditing.id && obj.type === "text") {
+            return {
+              ...obj,
+              attrs: { ...obj.attrs, text: textEditing.value }, // Update the text content
+            };
+          }
+          return obj;
+        })
+      );
+      setTextEditing({ id: null, value: "" }); // Reset editing
+    }
+  };
+
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <aside className="w-1/4 bg-gray-100 p-4 flex flex-col justify-between">
-        {/* File upload input */}
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageUpload}
-          className="p-2 border border-blue-300 rounded bg-white shadow-md"
-        />
-
-        {/* Overlay Image Upload */}
-        <div className="mb-4">
-          <label
-            htmlFor="upload-overlay-image"
-            className="p-2 border border-gray-300 rounded cursor-pointer"
-          >
-            Upload Overlay Image
-          </label>
-          <input
-            id="upload-overlay-image"
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            onChange={handleOverlayImageUpload}
-          />
-        </div>
-
-        {/* Color Picker - Only show when an element is selected */}
-        {selectedObjectId !== null && (
-          <div className="mb-4">
-            <ChromePicker
-              color={selectedColor}
-              onChangeComplete={handleColorChange}
-            />
-          </div>
-        )}
-
-        {/* Text Editing */}
-        {textEditing.id && (
-          <div className="mb-4 flex items-center">
-            <input
-              type="text"
-              value={textEditing.value}
-              onChange={handleTextChange}
-              className="p-2 border border-gray-300 rounded w-64"
-            />
-            <button
-              onClick={handleTextSubmit}
-              className="ml-2 bg-blue-500 text-white p-2 rounded"
-            >
-              Save
-            </button>
-          </div>
-        )}
-
-        {/* Tools Section */}
-        <div>
-          <h2 className="text-xl font-bold mb-4">Tools</h2>
-
-          {/* Add text Button  */}
-          <button
-            onClick={addText}
-            className="w-full mb-2 bg-gradient-to-r from-black to-violet-800 text-white p-2 rounded"
-          >
-            <FaFont className="mr-2" /> Text
-          </button>
-
-          {/* Shape Selection Dropdown */}
-          <div className="mb-4">
-            <select
-              id="shape-select"
-              value={selectedShape}
-              onChange={handleShapeChange}
-              className="p-2 border border-gray-300 rounded w-full"
-            >
-              <option value="">-- Select a Shape --</option>
-              <option value="rectangle">Rectangle</option>
-              <option value="circle">Circle</option>
-              <option value="star">Star</option>
-              <option value="line">Line</option>
-              <option value="arrow">Arrow</option>
-            </select>
-          </div>
-
-          {/* Add Shape Button */}
-          <button
-            onClick={handleShapeAdd}
-            className="w-full mb-2 bg-gradient-to-r from-black to-violet-800 text-white p-2 rounded"
-          >
-            Add Shape
-          </button>
-
-          <button
-            onClick={deleteAnnotation}
-            className="w-full mb-2 border border-red-500 text-red-500 hover:border-red-300 p-2 rounded"
-          >
-            <FaTrashAlt className="mr-2" /> Delete Selected Object
-          </button>
-
-          <button
-            onClick={saveCanvas}
-            className="w-full mb-2 bg-green-500 text-white p-2 rounded"
-          >
-            <FaSave className="mr-2" /> Save Canvas
-          </button>
-
-          <button
-            onClick={downloadCanvas}
-            className="w-full bg-indigo-500 text-white p-2 rounded"
-          >
-            <FaDownload className="mr-2" /> Download Canvas
-          </button>
-        </div>
-
-        {/* Resize Canvas */}
-        <div className="mt-4">
-          <h2 className="text-xl font-bold mb-4">Resize Canvas</h2>
-          <div className="flex space-x-4">
-            <button
-              onClick={() =>
-                handleCanvasResize(canvasSize.width + 50, canvasSize.height)
-              }
-              className="bg-blue-500 text-white p-2 rounded"
-            >
-              <FaPlus />
-            </button>
-            <button
-              onClick={() =>
-                handleCanvasResize(canvasSize.width - 50, canvasSize.height)
-              }
-              className="bg-red-500 text-white p-2 rounded"
-            >
-              <FaMinus />
-            </button>
-          </div>
-        </div>
-
-        {/* Recently Saved Section */}
-        <div>
-          <h2 className="text-xl font-bold mb-4">Recently Saved</h2>
-          <ul className="space-y-2">
-            {recentlySaved.map((save, index) => (
-              <li
-                key={index}
-                className="bg-white shadow rounded overflow-hidden"
-              >
-                <img
-                  src={save}
-                  alt={`Save ${index}`}
-                  className="w-full h-24 object-cover"
-                />
-              </li>
-            ))}
-          </ul>
-        </div>
-      </aside>
+      <Sidebar
+        handleImageUpload={handleImageUpload}
+        handleRemoveMainImage={handleRemoveMainImage}
+        handleOverlayImageUpload={handleOverlayImageUpload}
+        handleColorChange={handleColorChange}
+        addText={addText}
+        handleTextChange={handleTextChange}
+        handleTextSubmit={handleTextSubmit}
+        handleShapeChange={handleShapeChange}
+        handleShapeAdd={handleShapeAdd}
+        deleteAnnotation={deleteAnnotation}
+        saveCanvas={saveCanvas}
+        downloadCanvas={downloadCanvas}
+        handleCanvasResize={handleCanvasResize}
+        imageUrl={imageUrl}
+        selectedColor={selectedColor}
+        textType={textType}
+        setTextType={setTextType}
+        textSize={textSize}
+        setTextSize={setTextSize}
+        selectedShape={selectedShape}
+        canvasSize={canvasSize}
+        recentlySaved={recentlySaved}
+      />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-center bg-gray-200">
@@ -499,6 +443,7 @@ const KonvaCanvas = () => {
             width={canvasSize.width}
             height={canvasSize.height}
             ref={stageRef}
+            onClick={handleStageClick}
           >
             <Layer>
               {/* Render uploaded image */}
@@ -538,19 +483,7 @@ const KonvaCanvas = () => {
                         onClick={() => handleObjectClick(obj.id)}
                       />
                     );
-                  case "text":
-                    return (
-                      <Text
-                        key={obj.id}
-                        {...obj.attrs}
-                        ref={obj.ref}
-                        onClick={() => handleObjectClick(obj.id)}
-                        onDblClick={() =>
-                          handleTextDblClick(obj.id, obj.attrs.text)
-                        }
-                        draggable
-                      />
-                    );
+
                   case "line":
                     return (
                       <Line
@@ -606,6 +539,23 @@ const KonvaCanvas = () => {
                         onClick={() => handleObjectClick(obj.id)}
                       />
                     );
+                  case "text":
+                    return (
+                      <Text
+                        key={obj.id}
+                        text={obj.attrs.text}
+                        fontSize={obj.attrs.fontSize}
+                        fontFamily={obj.attrs.fontFamily}
+                        fontStyle={obj.attrs.fontStyle}
+                        x={obj.attrs.x}
+                        y={obj.attrs.y}
+                        draggable={obj.attrs.draggable}
+                        fill={obj.attrs.fill}
+                        ref={obj.ref}
+                        onClick={() => setSelectedObjectId(obj.id)}
+                        onDblClick={() => handleTextDoubleClick(obj.id)}
+                      />
+                    );
 
                   default:
                     return null;
@@ -624,6 +574,28 @@ const KonvaCanvas = () => {
               )}
             </Layer>
           </Stage>
+
+          {textEditing.id && (
+            <textarea
+              style={{
+                position: "absolute",
+                top: textEditing.y, // Position textarea at text's Y coordinate
+                left: textEditing.x, // Position textarea at text's X coordinate
+                zIndex: 10,
+                resize: "none",
+                outline: "none",
+                border: "1px solid #ccc",
+                fontSize: textEditing.fontSize,
+                fontFamily: textEditing.fontFamily,
+                color: textEditing.color,
+                background: "transparent", // Transparent background for the textarea
+              }}
+              value={textEditing.value}
+              onChange={handleTextChange}
+              onBlur={saveEditedText} // Save text on blur
+              autoFocus
+            />
+          )}
         </div>
       </div>
     </div>

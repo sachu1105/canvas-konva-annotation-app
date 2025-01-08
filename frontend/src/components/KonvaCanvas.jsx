@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import Sidebar from "./Sidebar";
+import ImageEditorSidebar from "./Sidebar";
 import {
   Stage,
   Layer,
@@ -13,7 +13,10 @@ import {
   Line,
 } from "react-konva";
 
-const KonvaCanvas = () => {
+const KonvaCanvas = ({
+  addCustomPlaceholder,
+  customPlaceholders,
+}) => {
   const [imageUrl, setImageUrl] = useState(null); // Stores the uploaded image URL
   const [image, setImage] = useState(null); // Stores the Image object
   const [objects, setObjects] = useState([]); // Stores the list of added objects (shapes, text)
@@ -405,10 +408,36 @@ const baseFontSize = textSizes[textType] || 16; // Default to 16px if textType i
     }
   };
 
+  // Function to add a placeholder text to the canvas
+  const addPlaceholderToCanvas = (placeholder) => {
+    if (placeholder) {
+      const id = Date.now(); // Unique ID for the text
+      const textRef = React.createRef(); // Reference for the text
+
+      setObjects((prevObjects) => [
+        ...prevObjects,
+        {
+          id,
+          type: "text",
+          ref: textRef,
+          attrs: {
+            x: 100,
+            y: 100,
+            text: placeholder, // Set the placeholder text
+            fontSize: 20, // Default font size
+            fontFamily: "Arial", // Optional: Set font family
+            draggable: true,
+            fill: "#000000", // Default color
+          },
+        },
+      ]);
+    }
+  };
+
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <Sidebar
+      <ImageEditorSidebar
         handleImageUpload={handleImageUpload}
         handleRemoveMainImage={handleRemoveMainImage}
         handleOverlayImageUpload={handleOverlayImageUpload}
@@ -431,6 +460,9 @@ const baseFontSize = textSizes[textType] || 16; // Default to 16px if textType i
         selectedShape={selectedShape}
         canvasSize={canvasSize}
         recentlySaved={recentlySaved}
+        addCustomPlaceholder={addCustomPlaceholder}
+        customPlaceholders={customPlaceholders}
+        addPlaceholderToCanvas={addPlaceholderToCanvas}
       />
 
       {/* Main Content */}

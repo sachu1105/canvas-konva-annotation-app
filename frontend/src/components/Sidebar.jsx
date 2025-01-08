@@ -1,12 +1,20 @@
-import { ChromePicker } from "react-color";
+import React, { useState } from 'react';
 import {
-  FaFont,
-  FaTrashAlt,
-  FaSave,
-  FaDownload,
-  FaPlus,
-  FaMinus,
-} from "react-icons/fa";
+  ChevronLeft,
+  ChevronRight,
+  Image,
+  Shapes,
+  Palette,
+  Type,
+  Ruler,
+  History,
+  Tag,
+  Trash2,
+  Save,
+  Download,
+  Plus,
+  Minus
+} from "lucide-react";
 
 const ImageEditorSidebar = ({
   handleImageUpload,
@@ -22,204 +30,340 @@ const ImageEditorSidebar = ({
   handleCanvasResize,
   imageUrl,
   selectedObjectId,
-  selectedColor,
+  selectedColor = "#000000",
   textType,
   setTextType,
   textSize,
   setTextSize,
   selectedShape,
   canvasSize,
-  recentlySaved,
+  recentlySaved = [],
+  addCustomPlaceholder,
+  customPlaceholders = [], // Provide default empty array
+  addPlaceholderToCanvas,
 }) => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [activeSection, setActiveSection] = useState('upload');
+  const [customPlaceholder, setCustomPlaceholder] = useState("");
+  const [selectedPlaceholder, setSelectedPlaceholder] = useState("");
+
+  // Default placeholders
+  const defaultPlaceholders = ["{f_name}", "{e_mail}", "{address}", "{l_name}", "{ph_number}", "{id_no}"];
+  
+  // Combine default and custom placeholders
+  const allPlaceholders = [...defaultPlaceholders, ...(Array.isArray(customPlaceholders) ? customPlaceholders : [])];
+
+  const handleAddCustomPlaceholder = () => {
+    if (customPlaceholder.trim() !== "" && addCustomPlaceholder) {
+      addCustomPlaceholder(customPlaceholder);
+      setCustomPlaceholder("");
+    }
+  };
+
+  const predefinedSizes = {
+    A1: { width: 841, height: 1189 },
+    A2: { width: 594, height: 841 },
+    A3: { width: 420, height: 594 },
+    A4: { width: 297, height: 420 },
+    A5: { width: 210, height: 297 },
+    Certificate: { width: 1123, height: 794 },
+    Normal: { width: 800, height: 600 },
+  };
+
+  const handlePredefinedSizeChange = (e) => {
+    const selectedSize = predefinedSizes[e.target.value];
+    if (selectedSize) {
+      handleCanvasResize(selectedSize.width, selectedSize.height);
+    }
+  };
+
+  const SectionButton = ({ id, icon: Icon, label }) => (
+    <button
+      onClick={() => setActiveSection(id)}
+      className={`flex items-center w-full p-3 rounded-lg transition-all duration-200 ${
+        activeSection === id 
+          ? 'bg-amber-100 text-amber-800' 
+          : 'hover:bg-amber-50 text-gray-600'
+      }`}
+    >
+      <Icon size={20} />
+      {!isCollapsed && <span className="ml-3">{label}</span>}
+    </button>
+  );
+
+  const SimpleColorPicker = () => (
+    <div className="space-y-4">
+      <input
+        type="color"
+        value={selectedColor}
+        onChange={(e) => handleColorChange({ hex: e.target.value })}
+        className="w-full h-12 rounded-lg cursor-pointer"
+      />
+      <div className="grid grid-cols-8 gap-2">
+        {['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#000000', '#FFFFFF'].map((color) => (
+          <button
+            key={color}
+            onClick={() => handleColorChange({ hex: color })}
+            className="w-6 h-6 rounded-full border border-gray-200"
+            style={{ backgroundColor: color }}
+            aria-label={`Select color ${color}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+
   return (
-    <aside className="w-80 bg-white p-6 shadow-lg overflow-y-auto h-screen">
-      <div className="space-y-6">
-        {/* File Upload Section */}
-        <section>
-          <label className="block mb-2 text-sm font-medium text-gray-900">
-            Upload Image
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="mt-1 block w-full text-sm text-gray-500
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-full file:border-0
-                file:text-sm file:font-semibold
-                file:bg-violet-50 file:text-violet-700
-                hover:file:bg-violet-100"
-            />
-          </label>
-          {imageUrl && (
-            <button
-              onClick={handleRemoveMainImage}
-              className="mt-2 w-full py-2 px-4 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-            >
-              Clear Canvas
-            </button>
-          )}
-        </section>
+    <aside className={`relative h-screen bg-white transition-all duration-300 shadow-xl 
+      ${isCollapsed ? 'w-20' : 'w-80'}`}>
+      
+      {/* Collapse Toggle */}
+      <button
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="absolute -right-3 top-8 bg-amber-500 text-white p-1 rounded-full shadow-lg z-50"
+      >
+        {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+      </button>
 
-        {/* Overlay Image Upload */}
-        <section>
-          <label
-            htmlFor="upload-overlay-image"
-            className="block w-full py-2 px-4 text-sm font-medium text-center text-violet-700 bg-violet-50 rounded-md cursor-pointer hover:bg-violet-100"
-          >
-            Upload Overlay Image
-            <input
-              id="upload-overlay-image"
-              type="file"
-              accept="image/*"
-              onChange={handleOverlayImageUpload}
-              className="hidden"
-            />
-          </label>
-        </section>
-
-        {/* Color Picker */}
-        {selectedObjectId !== null && selectedColor && (
-          <section>
-            <h3 className="text-sm font-medium text-gray-900 mb-2">Color</h3>
-            <ChromePicker
-              color={selectedColor}
-              onChangeComplete={handleColorChange}
-              disableAlpha
-              styles={{ default: { picker: { width: "100%" } } }}
-            />
-          </section>
-        )}
-
-        {/* Text Tools */}
-        <section>
-          <h3 className="text-sm font-medium text-gray-900 mb-2">Text</h3>
+      <div className="h-full flex flex-col">
+        {/* Navigation */}
+        <div className="p-4 border-b border-amber-100">
           <div className="space-y-2">
-            <select
-              value={textType || "p"}
-              onChange={(e) => setTextType(e.target.value)}
-              className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-violet-500 focus:border-violet-500 sm:text-sm"
-            >
-              {["h1", "h2", "h3", "h4", "h5", "h6", "p"].map((type) => (
-                <option key={type} value={type}>
-                  {type.toUpperCase()}
-                </option>
-              ))}
-            </select>
-            <input
-              type="number"
-              value={textSize || 16} // Default to 16 if `textSize` is not set
-              min="8"
-              max="100"
-              onChange={(e) => setTextSize(parseInt(e.target.value))} // Update state with the new font size
-              className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-violet-500 focus:border-violet-500 sm:text-sm"
-            />
-            <button
-              onClick={addText}
-              className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500"
-            >
-              <FaFont className="inline mr-2" /> Add Text
-            </button>
+            <SectionButton id="upload" icon={Image} label="Images" />
+            <SectionButton id="text" icon={Type} label="Text" />
+            <SectionButton id="shapes" icon={Shapes} label="Shapes" />
+            <SectionButton id="color" icon={Palette} label="Color" />
+            <SectionButton id="placeholders" icon={Tag} label="Placeholders" />
+            <SectionButton id="canvas" icon={Ruler} label="Canvas" />
+            <SectionButton id="history" icon={History} label="History" />
           </div>
-        </section>
+        </div>
 
-        {/* Shape Tools */}
-        <section>
-          <h3 className="text-sm font-medium text-gray-900 mb-2">Shapes</h3>
-          <div className="space-y-2">
-            <select
-              value={selectedShape}
-              onChange={handleShapeChange}
-              className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-violet-500 focus:border-violet-500 sm:text-sm"
-            >
-              <option value="">Select a Shape</option>
-              {["rectangle", "circle", "star", "line", "arrow"].map((shape) => (
-                <option key={shape} value={shape}>
-                  {shape}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={handleShapeAdd}
-              className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500"
-            >
-              Add Shape
-            </button>
-          </div>
-        </section>
+        {/* Content Area */}
+        {!isCollapsed && (
+          <div className="flex-1 overflow-y-auto p-4">
+            {/* Upload Section */}
+            {activeSection === 'upload' && (
+              <div className="space-y-4">
+                <div className="p-4 border-2 border-dashed border-amber-200 rounded-lg hover:border-amber-400 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="main-image-upload"
+                  />
+                  <label
+                    htmlFor="main-image-upload"
+                    className="block text-center cursor-pointer"
+                  >
+                    <Image className="mx-auto h-8 w-8 text-amber-400" />
+                    <span className="mt-2 block text-sm font-medium text-gray-600">Upload Main Image</span>
+                  </label>
+                </div>
+                
+                <div className="p-4 border-2 border-dashed border-amber-200 rounded-lg hover:border-amber-400 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleOverlayImageUpload}
+                    className="hidden"
+                    id="overlay-image-upload"
+                  />
+                  <label
+                    htmlFor="overlay-image-upload"
+                    className="block text-center cursor-pointer"
+                  >
+                    <Image className="mx-auto h-8 w-8 text-amber-400" />
+                    <span className="mt-2 block text-sm font-medium text-gray-600">Upload Overlay Image</span>
+                  </label>
+                </div>
 
-        {/* Delete Object */}
-        {selectedObjectId !== null && (
-          <button
-            onClick={deleteAnnotation}
-            className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-          >
-            <FaTrashAlt className="inline mr-2" /> Delete Selected Object
-          </button>
-        )}
+                {imageUrl && (
+                  <button
+                    onClick={handleRemoveMainImage}
+                    className="w-full py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  >
+                    Clear Canvas
+                  </button>
+                )}
+              </div>
+            )}
 
-        {/* Canvas Actions */}
-        <section className="space-y-2">
-          <button
-            onClick={saveCanvas}
-            className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-          >
-            <FaSave className="inline mr-2" /> Save Canvas
-          </button>
-          <button
-            onClick={downloadCanvas}
-            className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            <FaDownload className="inline mr-2" /> Download Canvas
-          </button>
-        </section>
+            {/* Text Section */}
+            {activeSection === 'text' && (
+              <div className="space-y-4">
+                <select
+                  value={textType || "p"}
+                  onChange={(e) => setTextType(e.target.value)}
+                  className="w-full p-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                >
+                  {["h1", "h2", "h3", "h4", "h5", "h6", "p"].map((type) => (
+                    <option key={type} value={type}>{type.toUpperCase()}</option>
+                  ))}
+                </select>
 
-        {/* Resize Canvas */}
-        <section>
-          <h3 className="text-sm font-medium text-gray-900 mb-2">
-            Resize Canvas
-          </h3>
-          <div className="flex space-x-2">
-            <button
-              onClick={() =>
-                handleCanvasResize(canvasSize.width + 50, canvasSize.height)
-              }
-              className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500"
-            >
-              <FaPlus />
-            </button>
-            <button
-              onClick={() =>
-                handleCanvasResize(canvasSize.width - 50, canvasSize.height)
-              }
-              className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500"
-            >
-              <FaMinus />
-            </button>
-          </div>
-        </section>
-
-        {/* Recently Saved */}
-        <section>
-          <h3 className="text-sm font-medium text-gray-900 mb-2">
-            Recently Saved
-          </h3>
-          <div className="grid grid-cols-3 gap-2">
-            {recentlySaved && recentlySaved.length > 0 ? (
-              recentlySaved.map((save, index) => (
-                <img
-                  key={index}
-                  src={save}
-                  alt={`Save ${index}`}
-                  className="w-full h-20 object-cover rounded-md"
+                <input
+                  type="number"
+                  value={textSize || 16}
+                  min="8"
+                  max="100"
+                  onChange={(e) => setTextSize(parseInt(e.target.value))}
+                  className="w-full p-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
                 />
-              ))
-            ) : (
-              <p className="col-span-3 text-sm text-gray-500">
-                No recent saves
-              </p>
+
+                <button
+                  onClick={addText}
+                  className="w-full py-2 px-4 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                >
+                  <Type className="inline mr-2" /> Add Text
+                </button>
+              </div>
+            )}
+
+            {/* Shapes Section */}
+            {activeSection === 'shapes' && (
+              <div className="space-y-4">
+                <select
+                  value={selectedShape}
+                  onChange={handleShapeChange}
+                  className="w-full p-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="">Select a Shape</option>
+                  {["rectangle", "circle", "star", "line", "arrow"].map((shape) => (
+                    <option key={shape} value={shape}>{shape}</option>
+                  ))}
+                </select>
+
+                <button
+                  onClick={handleShapeAdd}
+                  className="w-full py-2 px-4 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                >
+                  Add Shape
+                </button>
+              </div>
+            )}
+
+            {/* Color Section */}
+            {activeSection === 'color' && selectedObjectId !== null && (
+              <SimpleColorPicker />
+            )}
+
+            {/* Placeholders Section */}
+            {activeSection === 'placeholders' && (
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  value={customPlaceholder}
+                  onChange={(e) => setCustomPlaceholder(e.target.value)}
+                  placeholder="Enter custom placeholder"
+                  className="w-full p-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+
+                <button
+                  onClick={handleAddCustomPlaceholder}
+                  className="w-full py-2 px-4 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                >
+                  Add Custom Placeholder
+                </button>
+
+                <select
+                  value={selectedPlaceholder}
+                  onChange={(e) => setSelectedPlaceholder(e.target.value)}
+                  className="w-full p-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="">Select a Placeholder</option>
+                  {allPlaceholders.map((placeholder, index) => (
+                    <option key={index} value={placeholder}>{placeholder}</option>
+                  ))}
+                </select>
+
+                <button
+                  onClick={() => addPlaceholderToCanvas(selectedPlaceholder)}
+                  className="w-full py-2 px-4 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                >
+                  Add to Canvas
+                </button>
+              </div>
+            )}
+
+            {/* Canvas Section */}
+            {activeSection === 'canvas' && (
+              <div className="space-y-4">
+                <select
+                  onChange={handlePredefinedSizeChange}
+                  className="w-full p-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="">Select Canvas Size</option>
+                  {Object.keys(predefinedSizes).map((size) => (
+                    <option key={size} value={size}>{size}</option>
+                  ))}
+                </select>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={() => handleCanvasResize(canvasSize.width + 50, canvasSize.height)}
+                    className="py-2 px-4 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                  >
+                    <Plus className="inline" /> Width
+                  </button>
+                  <button
+                    onClick={() => handleCanvasResize(canvasSize.width - 50, canvasSize.height)}
+                    className="py-2 px-4 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                  >
+                    <Minus className="inline" /> Width
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={saveCanvas}
+                    className="py-2 px-4 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                  >
+                    <Save className="inline mr-2" /> Save
+                  </button>
+                  <button
+                    onClick={downloadCanvas}
+                    className="py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    <Download className="inline mr-2" /> Download
+                  </button>
+                </div>
+
+                {selectedObjectId !== null && (
+                  <button
+                    onClick={deleteAnnotation}
+                    className="w-full py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  >
+                    <Trash2 className="inline mr-2" /> Delete Selected
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* History Section */}
+            {activeSection === 'history' && (
+              <div className="space-y-4">
+                <h3 className="font-medium text-gray-900">Recent Saves</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {recentlySaved && recentlySaved.length > 0 ? (
+                    recentlySaved.map((save, index) => (
+                      <img
+                        key={index}
+                        src={save}
+                        alt={`Save ${index}`}
+                        className="w-full h-24 object-cover rounded-lg border border-amber-200"
+                      />
+                    ))
+                  ) : (
+                    <p className="col-span-2 text-sm text-gray-500 text-center py-4">
+                      No recent saves
+                    </p>
+                  )}
+                </div>
+              </div>
             )}
           </div>
-        </section>
+        )}
       </div>
     </aside>
   );

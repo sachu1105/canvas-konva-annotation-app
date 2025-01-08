@@ -1,10 +1,19 @@
 import KonvaCanvas from "./components/KonvaCanvas";
-// import Sidebar from "./components/Sidebar";
+import { useState } from "react";
 
 function App() {
+  const [customPlaceholders, setCustomPlaceholders] = useState([]);
+
+  const addCustomPlaceholder = (placeholder) => {
+    setCustomPlaceholders((prev) => [...prev, `{${placeholder}}`]);
+  };
+
   return (
     <div>
-      <KonvaCanvas />
+      <KonvaCanvas
+        addCustomPlaceholder={addCustomPlaceholder}
+        customPlaceholders={customPlaceholders}
+      />
     </div>
   );
 }

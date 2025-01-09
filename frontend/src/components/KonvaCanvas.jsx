@@ -12,7 +12,8 @@ import {
   Star,
   Line,
 } from "react-konva";
-import { Undo, Redo, Trash2, Type, Shapes, Palette } from "lucide-react"; // Add Palette import
+import { Undo, Redo, Trash2, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight } from "lucide-react"; // Add text formatting icons
+import Select from 'react-select'; // Add react-select for font family dropdown
 
 const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders }) => {
   const [imageUrl, setImageUrl] = useState(null); // Stores the uploaded image URL
@@ -29,6 +30,12 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders }) => {
   const [selectedColor, setSelectedColor] = useState("#000000"); // Initial color
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [selectedFontFamily, setSelectedFontFamily] = useState("Arial");
+  const [selectedFontSize, setSelectedFontSize] = useState(20);
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
+  const [isUnderline, setIsUnderline] = useState(false);
+  const [textAlign, setTextAlign] = useState("left");
   // Refs for stage (canvas container) and transformer
   const stageRef = useRef(null);
   const transformerRef = useRef(null);
@@ -496,6 +503,69 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders }) => {
     // For example, setting the background image or adding predefined objects
   };
 
+  // Function to handle text formatting changes
+  const handleTextFormatting = (format) => {
+    if (selectedObjectId !== null) {
+      const updatedObjects = objects.map((obj) => {
+        if (obj.id === selectedObjectId && obj.type === "text") {
+          let newAttrs = { ...obj.attrs };
+          if (format === "bold") {
+            newAttrs.fontStyle = isBold ? "normal" : "bold";
+            setIsBold(!isBold);
+          } else if (format === "italic") {
+            newAttrs.fontStyle = isItalic ? "normal" : "italic";
+            setIsItalic(!isItalic);
+          } else if (format === "underline") {
+            newAttrs.textDecoration = isUnderline ? "" : "underline";
+            setIsUnderline(!isUnderline);
+          } else if (format === "align-left") {
+            newAttrs.align = "left";
+            setTextAlign("left");
+          } else if (format === "align-center") {
+            newAttrs.align = "center";
+            setTextAlign("center");
+          } else if (format === "align-right") {
+            newAttrs.align = "right";
+            setTextAlign("right");
+          }
+          return { ...obj, attrs: newAttrs };
+        }
+        return obj;
+      });
+      setObjects(updatedObjects);
+      addToHistory(updatedObjects);
+    }
+  };
+
+  // Function to handle font family change
+  const handleFontFamilyChange = (selectedOption) => {
+    setSelectedFontFamily(selectedOption.value);
+    if (selectedObjectId !== null) {
+      const updatedObjects = objects.map((obj) =>
+        obj.id === selectedObjectId && obj.type === "text"
+          ? { ...obj, attrs: { ...obj.attrs, fontFamily: selectedOption.value } }
+          : obj
+      );
+      setObjects(updatedObjects);
+      addToHistory(updatedObjects);
+    }
+  };
+
+  // Function to handle font size change
+  const handleFontSizeChange = (e) => {
+    const newSize = parseInt(e.target.value);
+    setSelectedFontSize(newSize);
+    if (selectedObjectId !== null) {
+      const updatedObjects = objects.map((obj) =>
+        obj.id === selectedObjectId && obj.type === "text"
+          ? { ...obj, attrs: { ...obj.attrs, fontSize: newSize } }
+          : obj
+      );
+      setObjects(updatedObjects);
+      addToHistory(updatedObjects);
+    }
+  };
+
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
@@ -562,8 +632,67 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders }) => {
             />
           </div>
 
-
-
+          {/* Text formatting options */}
+          {selectedObjectId !== null && objects.find((obj) => obj.id === selectedObjectId)?.type === "text" && (
+            <div className="flex gap-2 ml-8">
+              <button
+                onClick={() => handleTextFormatting("bold")}
+                className={`py-2 px-4 border ${isBold ? "bg-gray-300" : "bg-gray-100"} text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
+              >
+                <Bold className="inline" />
+              </button>
+              <button
+                onClick={() => handleTextFormatting("italic")}
+                className={`py-2 px-4 border ${isItalic ? "bg-gray-300" : "bg-gray-100"} text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
+              >
+                <Italic className="inline" />
+              </button>
+              <button
+                onClick={() => handleTextFormatting("underline")}
+                className={`py-2 px-4 border ${isUnderline ? "bg-gray-300" : "bg-gray-100"} text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
+              >
+                <Underline className="inline" />
+              </button>
+              <button
+                onClick={() => handleTextFormatting("align-left")}
+                className={`py-2 px-4 border ${textAlign === "left" ? "bg-gray-300" : "bg-gray-100"} text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
+              >
+                <AlignLeft className="inline" />
+              </button>
+              <button
+                onClick={() => handleTextFormatting("align-center")}
+                className={`py-2 px-4 border ${textAlign === "center" ? "bg-gray-300" : "bg-gray-100"} text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
+              >
+                <AlignCenter className="inline" />
+              </button>
+              <button
+                onClick={() => handleTextFormatting("align-right")}
+                className={`py-2 px-4 border ${textAlign === "right" ? "bg-gray-300" : "bg-gray-100"} text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
+              >
+                <AlignRight className="inline" />
+              </button>
+              <Select
+                value={{ value: selectedFontFamily, label: selectedFontFamily }}
+                onChange={handleFontFamilyChange}
+                options={[
+                  { value: "Arial", label: "Arial" },
+                  { value: "Courier New", label: "Courier New" },
+                  { value: "Georgia", label: "Georgia" },
+                  { value: "Times New Roman", label: "Times New Roman" },
+                  { value: "Verdana", label: "Verdana" },
+                ]}
+                className="w-40"
+              />
+              <input
+                type="number"
+                value={selectedFontSize}
+                onChange={handleFontSizeChange}
+                className="w-20 p-2 border border-gray-300 rounded-lg"
+                min="8"
+                max="100"
+              />
+            </div>
+          )}
 
           {/* Move undo, redo, and delete buttons to the top right corner */}
           <div className="flex gap-2 ml-auto">
@@ -712,6 +841,8 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders }) => {
                           fontSize={obj.attrs.fontSize}
                           fontFamily={obj.attrs.fontFamily}
                           fontStyle={obj.attrs.fontStyle}
+                          textDecoration={obj.attrs.textDecoration}
+                          align={obj.attrs.align}
                           x={obj.attrs.x}
                           y={obj.attrs.y}
                           draggable={obj.attrs.draggable}

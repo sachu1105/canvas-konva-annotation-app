@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import {
-  ChevronLeft,
-  ChevronRight,
   Image,
-  Shapes,
   Palette,
   Type,
   Ruler,
@@ -19,8 +16,6 @@ const ImageEditorSidebar = ({
   handleRemoveMainImage,
   handleOverlayImageUpload,
   handleColorChange,
-  handleShapeChange,
-  deleteAnnotation,
   saveCanvas,
   downloadCanvas,
   handleCanvasResize,
@@ -31,7 +26,6 @@ const ImageEditorSidebar = ({
   setTextType,
   textSize,
   setTextSize,
-  selectedShape,
   canvasSize,
   recentlySaved = [],
   addCustomPlaceholder,

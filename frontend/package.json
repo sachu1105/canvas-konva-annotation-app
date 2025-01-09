@@ -28,6 +28,7 @@
     "react-dom": "^19.0.0",
     "react-icons": "^5.4.0",
     "react-konva": "^19.0.1",
+    "react-select": "^5.9.0",
     "redix": "^1.0.22",
     "xlsx": "^0.18.5"
   },

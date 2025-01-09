@@ -9,11 +9,9 @@ import {
   Ruler,
   History,
   Tag,
-  Trash2,
   Save,
   Download,
   Plus,
-  
 } from "lucide-react";
 
 const ImageEditorSidebar = ({
@@ -21,9 +19,7 @@ const ImageEditorSidebar = ({
   handleRemoveMainImage,
   handleOverlayImageUpload,
   handleColorChange,
-  addText,
   handleShapeChange,
-  handleShapeAdd,
   deleteAnnotation,
   saveCanvas,
   downloadCanvas,
@@ -41,8 +37,9 @@ const ImageEditorSidebar = ({
   addCustomPlaceholder,
   customPlaceholders = [], // Provide default empty array
   addPlaceholderToCanvas,
-  undo,
-  redo,
+  onSectionChange, // Add this prop
+  handleShapeAdd,
+  addText,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState('upload');
@@ -79,9 +76,16 @@ const ImageEditorSidebar = ({
     }
   };
 
+  const handleSectionChange = (id) => {
+    setActiveSection(id);
+    if (onSectionChange) {
+      onSectionChange(id);
+    }
+  };
+
   const SectionButton = ({ id, icon: Icon, label }) => (
     <button
-      onClick={() => setActiveSection(id)}
+      onClick={() => handleSectionChange(id)} // Use handleSectionChange
       className={`flex items-center w-full p-3 rounded-lg transition-all duration-200 ${
         activeSection === id 
           ? 'bg-amber-100 text-amber-800' 
@@ -116,27 +120,33 @@ const ImageEditorSidebar = ({
   );
 
   return (
-    <aside className={`relative h-screen bg-white transition-all duration-300 shadow-xl 
-      ${isCollapsed ? 'w-20' : 'w-80'}`}>
+    <aside className={`relative h-screen bg-white transition-all duration-2
+      00 shadow-xl 
+      ${isCollapsed ? 'w-20' : 'w-80'}`}
+      
+      onMouseEnter={() => setIsCollapsed(false)}
+      onMouseLeave={() => setIsCollapsed(true)}
+      >
+        
       
       {/* Collapse Toggle */}
-      <button
+      {/* <button
         onClick={() => setIsCollapsed(!isCollapsed)}
         className="absolute -right-3 top-8 bg-amber-500 text-white p-1 rounded-full shadow-lg z-50"
       >
         {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-      </button>
+      </button> */}
 
       <div className="h-full flex flex-col">
         {/* Navigation */}
         <div className="p-4 border-b border-amber-100">
           <div className="space-y-2">
+            <SectionButton id="canvas" icon={Ruler} label="Canvas" />
             <SectionButton id="upload" icon={Image} label="Images" />
             <SectionButton id="text" icon={Type} label="Text" />
-            <SectionButton id="shapes" icon={Shapes} label="Shapes" />
+            {/* <SectionButton id="shapes" icon={Shapes} label="Shapes" /> */}
             <SectionButton id="color" icon={Palette} label="Color" />
             <SectionButton id="placeholders" icon={Tag} label="Placeholders" />
-            <SectionButton id="canvas" icon={Ruler} label="Canvas" />
             <SectionButton id="history" icon={History} label="History" />
           </div>
         </div>
@@ -213,8 +223,7 @@ const ImageEditorSidebar = ({
                   onChange={(e) => setTextSize(parseInt(e.target.value))}
                   className="w-full p-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
                 />
-
-                <button
+                 <button
                   onClick={addText}
                   className="w-full py-2 px-4 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                 >
@@ -224,7 +233,7 @@ const ImageEditorSidebar = ({
             )}
 
             {/* Shapes Section */}
-            {activeSection === 'shapes' && (
+            {/* {activeSection === 'shapes' && (
               <div className="space-y-4">
                 <select
                   value={selectedShape}
@@ -236,7 +245,7 @@ const ImageEditorSidebar = ({
                     <option key={shape} value={shape}>{shape}</option>
                   ))}
                 </select>
-
+                
                 <button
                   onClick={handleShapeAdd}
                   className="w-full py-2 px-4 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
@@ -244,7 +253,7 @@ const ImageEditorSidebar = ({
                   Add Shape
                 </button>
               </div>
-            )}
+            )} */}
 
             {/* Color Section */}
             {activeSection === 'color' && selectedObjectId !== null && (

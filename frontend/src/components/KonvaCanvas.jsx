@@ -12,7 +12,7 @@ import {
   Star,
   Line,
 } from "react-konva";
-import { Undo, Redo, Trash2 } from "lucide-react"; // Add Trash2 import
+import { Undo, Redo, Trash2, Type, Shapes, Palette } from "lucide-react"; // Add Palette import
 
 const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders }) => {
   const [imageUrl, setImageUrl] = useState(null); // Stores the uploaded image URL
@@ -491,6 +491,11 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders }) => {
     addToHistory(updatedObjects);
   };
 
+  const handleTemplateClick = (template) => {
+    // Logic to apply the template to the canvas
+    // For example, setting the background image or adding predefined objects
+  };
+
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
@@ -522,31 +527,63 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders }) => {
         addPlaceholderToCanvas={addPlaceholderToCanvas}
         undo={undo}
         redo={redo}
+        handleTemplateClick={handleTemplateClick}
       />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col bg-gray-200 overflow-hidden">
         <div className="flex justify-between items-center w-full p-4 bg-white shadow-md z-10">
-          
+          {/* Add Text and Shape dropdowns to the top navbar */}
+          <div className="flex gap-2 ml-8">
+            <button
+              onClick={addText}
+              className="py-2 px-4 border border-amber-500 text-grey-800 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+            Add Text
+            </button>
+            <select
+              onChange={handleShapeChange}
+              onClick={handleShapeAdd}
+              className="py-2 px-4  border  border-amber-500 text-grey-600 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <option value="">Select Shape</option>
+              <option value="rectangle">Rectangle</option>
+              <option value="circle">Circle</option>
+              <option value="star">Star</option>
+              <option value="line">Line</option>
+              <option value="arrow">Arrow</option>
+            </select>
+            
+            <input
+              type="color"
+              value={selectedColor}
+              onChange={(e) => handleColorChange({ hex: e.target.value })}
+              className="w-12 h-12  cursor-pointer "
+            />
+          </div>
+
+
+
+
           {/* Move undo, redo, and delete buttons to the top right corner */}
           <div className="flex gap-2 ml-auto">
             <button
               onClick={undo}
               disabled={historyIndex <= 0}
-              className="py-2 px-4 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors"
+              className="py-2 px-4 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
             >
               <Undo className="inline" />
             </button>
             <button
               onClick={redo}
               disabled={historyIndex >= history.length - 1}
-              className="py-2 px-4 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors"
+              className="py-2 px-4 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
             >
               <Redo className="inline" />
             </button>
             <button
               onClick={deleteAnnotation}
-              className="py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              className="py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
             >
               <Trash2 className="inline" />
             </button>

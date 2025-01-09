@@ -13,7 +13,7 @@ import {
   Save,
   Download,
   Plus,
-  Minus
+  
 } from "lucide-react";
 
 const ImageEditorSidebar = ({
@@ -41,6 +41,8 @@ const ImageEditorSidebar = ({
   addCustomPlaceholder,
   customPlaceholders = [], // Provide default empty array
   addPlaceholderToCanvas,
+  undo,
+  redo,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState('upload');
@@ -302,41 +304,37 @@ const ImageEditorSidebar = ({
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     onClick={() => handleCanvasResize(canvasSize.width + 50, canvasSize.height)}
-                    className="py-2 px-4 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                    className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200"
                   >
                     <Plus className="inline" /> Width
                   </button>
-                  <button
+                  {/* <button
                     onClick={() => handleCanvasResize(canvasSize.width - 50, canvasSize.height)}
                     className="py-2 px-4 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                   >
                     <Minus className="inline" /> Width
+                  </button> */}
+                    <button onClick={() => handleCanvasResize(canvasSize.width, canvasSize.height + 50)}
+                    className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200">
+                    <Plus size={16} className="inline mr-1" /> Height
                   </button>
+                  
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     onClick={saveCanvas}
-                    className="py-2 px-4 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                    className="py-2 px-4 bg-gray-100 text-gray-800 rounded-lg hover:bg-green-600 transition-colors"
                   >
                     <Save className="inline mr-2" /> Save
                   </button>
                   <button
                     onClick={downloadCanvas}
-                    className="py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                    className="py-2 px-4 bg-gray-100 text-gray-800 rounded-lg hover:bg-blue-600 transition-colors"
                   >
                     <Download className="inline mr-2" /> Download
                   </button>
                 </div>
-
-                {selectedObjectId !== null && (
-                  <button
-                    onClick={deleteAnnotation}
-                    className="w-full py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                  >
-                    <Trash2 className="inline mr-2" /> Delete Selected
-                  </button>
-                )}
               </div>
             )}
 

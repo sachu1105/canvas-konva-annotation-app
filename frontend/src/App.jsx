@@ -9,7 +9,7 @@ function App() {
   };
 
   return (
-    <div>
+    <div className="font-poppins">
       <KonvaCanvas
         addCustomPlaceholder={addCustomPlaceholder}
         customPlaceholders={customPlaceholders}

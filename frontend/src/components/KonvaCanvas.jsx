@@ -12,10 +12,28 @@ import {
   Star,
   Line,
 } from "react-konva";
-import { Undo, Redo, Trash2, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight } from "lucide-react"; // Add text formatting icons
-import Select from 'react-select'; // Add react-select for font family dropdown
+import {
+  Bold,
+  Italic,
+  Underline,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Undo,
+  Redo,
+  Trash2,
+  Type,
+  Palette,
+} from "lucide-react"; // Add text formatting icons
+import Select from "react-select"; // Add react-select for font family dropdown
 
-const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders, templates, handleTemplateLoad, selectedTemplate }) => {
+const KonvaCanvas = ({
+  addCustomPlaceholder,
+  customPlaceholders,
+  templates,
+  handleTemplateLoad,
+  selectedTemplate,
+}) => {
   const [imageUrl, setImageUrl] = useState(null); // Stores the uploaded image URL
   const [image, setImage] = useState(null); // Stores the Image object
   const [objects, setObjects] = useState([]); // Stores the list of added objects (shapes, text)
@@ -83,7 +101,6 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders, templates, hand
     }
   }, [selectedObjectId, objects]);
 
-
   //History Undo and redo
   const addToHistory = (newObjects) => {
     const newHistory = history.slice(0, historyIndex + 1);
@@ -106,7 +123,7 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders, templates, hand
     }
   };
 
-  //shapes logics 
+  //shapes logics
   const addRectangle = () => {
     const id = Date.now(); // Unique ID for the rectangle
     const rectRef = React.createRef(); // Reference for the rectangle
@@ -546,7 +563,10 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders, templates, hand
     if (selectedObjectId !== null) {
       const updatedObjects = objects.map((obj) =>
         obj.id === selectedObjectId && obj.type === "text"
-          ? { ...obj, attrs: { ...obj.attrs, fontFamily: selectedOption.value } }
+          ? {
+              ...obj,
+              attrs: { ...obj.attrs, fontFamily: selectedOption.value },
+            }
           : obj
       );
       setObjects(updatedObjects);
@@ -571,22 +591,24 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders, templates, hand
 
   const loadTemplate = (template) => {
     if (!template || !template.elements) return;
-    const newObjects = template.elements.map((element) => {
-      const id = Date.now() + Math.random(); // Unique ID for each element
-      const ref = React.createRef();
-      if (element.type === 'text') {
-        return {
-          id,
-          type: 'text',
-          ref,
-          attrs: {
-            ...element,
-            draggable: true,
-          },
-        };
-      }
-      return null;
-    }).filter(Boolean);
+    const newObjects = template.elements
+      .map((element) => {
+        const id = Date.now() + Math.random(); // Unique ID for each element
+        const ref = React.createRef();
+        if (element.type === "text") {
+          return {
+            id,
+            type: "text",
+            ref,
+            attrs: {
+              ...element,
+              draggable: true,
+            },
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
 
     const img = new window.Image();
     img.src = template.preview;
@@ -602,6 +624,19 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders, templates, hand
       loadTemplate(selectedTemplate);
     }
   }, [selectedTemplate]);
+
+  const ToolbarButton = ({ onClick, active, disabled, icon: Icon, label }) => (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`p-2 rounded-lg hover:bg-gray-100 transition-colors ${
+        active ? "bg-gray-200" : ""
+      } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+      title={label}
+    >
+      <Icon className="w-5 h-5" />
+    </button>
+  );
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -648,7 +683,7 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders, templates, hand
               onClick={addText}
               className="py-2 px-4 border text-sm border-gray-500 text-grey-800 rounded-lg hover:bg-gray-100 transition-colors"
             >
-            Add Text
+              Add Text
             </button>
             <select
               onChange={handleShapeChange}
@@ -662,99 +697,118 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders, templates, hand
               <option value="line">Line</option>
               <option value="arrow">Arrow</option>
             </select>
-            
-            <input
-              type="color"
-              value={selectedColor}
-              onChange={(e) => handleColorChange({ hex: e.target.value })}
-              className="w-12 h-12  cursor-pointer "
-            />
+
+            <div className="flex items-center gap-2">
+              <Palette className="w-5 h-5 text-gray-500" />
+              <input
+                type="color"
+                value={selectedColor}
+                onChange={(e) => handleColorChange?.({ hex: e.target.value })}
+                className="w-8 h-8 rounded cursor-pointer border border-gray-200"
+                title="Choose Color"
+              />
+            </div>
           </div>
 
           {/* Text formatting options */}
-          {selectedObjectId !== null && objects.find((obj) => obj.id === selectedObjectId)?.type === "text" && (
-            <div className="flex gap-2 mr-8 ml-4">
-              <button
-                onClick={() => handleTextFormatting("bold")}
-                className={`py-2 px-4 border ${isBold ? "bg-gray-300" : "bg-gray-100"} text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
-              >
-                <Bold className="inline" />
-              </button>
-              <button
-                onClick={() => handleTextFormatting("italic")}
-                className={`py-2 px-4 border ${isItalic ? "bg-gray-300" : "bg-gray-100"} text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
-              >
-                <Italic className="inline" />
-              </button>
-              <button
-                onClick={() => handleTextFormatting("underline")}
-                className={`py-2 px-4 border ${isUnderline ? "bg-gray-300" : "bg-gray-100"} text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
-              >
-                <Underline className="inline" />
-              </button>
-              <button
-                onClick={() => handleTextFormatting("align-left")}
-                className={`py-2 px-4 border ${textAlign === "left" ? "bg-gray-300" : "bg-gray-100"} text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
-              >
-                <AlignLeft className="inline" />
-              </button>
-              <button
-                onClick={() => handleTextFormatting("align-center")}
-                className={`py-2 px-4 border ${textAlign === "center" ? "bg-gray-300" : "bg-gray-100"} text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
-              >
-                <AlignCenter className="inline" />
-              </button>
-              <button
-                onClick={() => handleTextFormatting("align-right")}
-                className={`py-2 px-4 border ${textAlign === "right" ? "bg-gray-300" : "bg-gray-100"} text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
-              >
-                <AlignRight className="inline" />
-              </button>
-              <Select
-                value={{ value: selectedFontFamily, label: selectedFontFamily }}
-                onChange={handleFontFamilyChange}
-                options={[
-                  { value: "Arial", label: "Arial" },
-                  { value: "Courier New", label: "Courier New" },
-                  { value: "Georgia", label: "Georgia" },
-                  { value: "Times New Roman", label: "Times New Roman" },
-                  { value: "Verdana", label: "Verdana" },
-                ]}
-                className="w-40"
-              />
-              <input
-                type="number"
-                value={selectedFontSize}
-                onChange={handleFontSizeChange}
-                className="w-20 p-2 border border-gray-300 rounded-lg"
-                min="8"
-                max="100"
-              />
-            </div>
-          )}
+          {selectedObjectId !== null &&
+            objects.find((obj) => obj.id === selectedObjectId)?.type ===
+              "text" && (
+              <div className="flex gap-2 mr-8 ml-4">
+                <button
+                  onClick={() => handleTextFormatting("bold")}
+                  className={`py-2 px-4 border ${
+                    isBold ? "bg-gray-300" : "bg-gray-100"
+                  } text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
+                >
+                  <Bold className="inline" />
+                </button>
+                <button
+                  onClick={() => handleTextFormatting("italic")}
+                  className={`py-2 px-4 border ${
+                    isItalic ? "bg-gray-300" : "bg-gray-100"
+                  } text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
+                >
+                  <Italic className="inline" />
+                </button>
+                <button
+                  onClick={() => handleTextFormatting("underline")}
+                  className={`py-2 px-4 border ${
+                    isUnderline ? "bg-gray-300" : "bg-gray-100"
+                  } text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
+                >
+                  <Underline className="inline" />
+                </button>
+                <button
+                  onClick={() => handleTextFormatting("align-left")}
+                  className={`py-2 px-4 border ${
+                    textAlign === "left" ? "bg-gray-300" : "bg-gray-100"
+                  } text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
+                >
+                  <AlignLeft className="inline" />
+                </button>
+                <button
+                  onClick={() => handleTextFormatting("align-center")}
+                  className={`py-2 px-4 border ${
+                    textAlign === "center" ? "bg-gray-300" : "bg-gray-100"
+                  } text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
+                >
+                  <AlignCenter className="inline" />
+                </button>
+                <button
+                  onClick={() => handleTextFormatting("align-right")}
+                  className={`py-2 px-4 border ${
+                    textAlign === "right" ? "bg-gray-300" : "bg-gray-100"
+                  } text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
+                >
+                  <AlignRight className="inline" />
+                </button>
+                <Select
+                  value={{
+                    value: selectedFontFamily,
+                    label: selectedFontFamily,
+                  }}
+                  onChange={handleFontFamilyChange}
+                  options={[
+                    { value: "Arial", label: "Arial" },
+                    { value: "Courier New", label: "Courier New" },
+                    { value: "Georgia", label: "Georgia" },
+                    { value: "Times New Roman", label: "Times New Roman" },
+                    { value: "Verdana", label: "Verdana" },
+                  ]}
+                  className="w-40"
+                />
+                <input
+                  type="number"
+                  value={selectedFontSize}
+                  onChange={handleFontSizeChange}
+                  className="w-20 p-2 border border-gray-300 rounded-lg"
+                  min="8"
+                  max="100"
+                />
+              </div>
+            )}
 
           {/* Move undo, redo, and delete buttons to the top right corner */}
           <div className="flex gap-2 ml-auto">
-            <button
+            <ToolbarButton
               onClick={undo}
-              disabled={historyIndex <= 0}
-              className="py-2 px-4 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
-            >
-              <Undo className="inline" />
-            </button>
-            <button
+              disabled={!undo || historyIndex <= 0}
+              icon={Undo}
+              label="Undo"
+            />
+            <ToolbarButton
               onClick={redo}
-              disabled={historyIndex >= history.length - 1}
-              className="py-2 px-4 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
-            >
-              <Redo className="inline" />
-            </button>
-            <button
+              disabled={!redo || historyIndex >= history.length - 1}
+              icon={Redo}
+              label="Redo"
+            />
+            <ToolbarButton
               onClick={deleteAnnotation}
-              className="py-2 px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-red-600 hover:text-white transition-colors cursor-pointer"
-            >
-              <Trash2 className="inline" />
-            </button>
+              disabled={!deleteAnnotation}
+              icon={Trash2}
+              label="Delete"
+            />
           </div>
         </div>
 

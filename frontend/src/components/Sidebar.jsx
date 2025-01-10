@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   Image,
-  Palette,
   Type,
   Ruler,
   History,
@@ -16,24 +15,16 @@ const ImageEditorSidebar = ({
   handleImageUpload,
   handleRemoveMainImage,
   handleOverlayImageUpload,
-  handleColorChange,
   saveCanvas,
   downloadCanvas,
   handleCanvasResize,
   imageUrl,
-  selectedObjectId,
-  selectedColor = "#000000",
-  textType,
-  setTextType,
-  textSize,
-  setTextSize,
   canvasSize,
   recentlySaved = [],
   addCustomPlaceholder,
   customPlaceholders = [], // Provide default empty array
   addPlaceholderToCanvas,
   onSectionChange, // Add this prop
-  addText,
   templates, // Add templates prop
   handleTemplateLoad, // Add handleTemplateLoad prop
 }) => {
@@ -79,19 +70,19 @@ const ImageEditorSidebar = ({
     }
   };
 
+  //hover on effect on sidebar 
   const SectionButton = ({ id, icon: Icon, label }) => (
     <button
-      onClick={() => handleSectionChange(id)} // Use handleSectionChange
-      className={`flex items-center w-full p-3 rounded-lg transition-all duration-300 ${
-        activeSection === id 
-          ? 'bg-amber-100 text-amber-800' 
-          : 'hover:bg-amber-50 text-gray-600'
-      }`}
+      onClick={() => setActiveSection(id)}
+      className={`w-full p-3 flex items-center rounded-lg transition-all duration-200
+        hover:scale-105  hover:-translate-y-0.2
+        ${activeSection === id ? 'bg-amber-100 text-amber-900' : 'text-gray-600 hover:text-amber-500'}`}
     >
-      <Icon size={20} />
-      {!isCollapsed && <span className="ml-3">{label}</span>}
+      <Icon className="h-5 w-5" />
+      <span className={`ml-3 ${isCollapsed ? 'hidden' : 'block'}`}>{label}</span>
     </button>
   );
+  
 
   return (
     <aside className={`relative h-screen bg-white transition-all duration-200 shadow-xl ${isCollapsed ? 'w-20' : 'w-80'}`}
@@ -105,7 +96,6 @@ const ImageEditorSidebar = ({
             <SectionButton id="canvas" icon={Ruler} label="Canvas" />
             <SectionButton id="template" icon={Template} label="Template" />
             <SectionButton id="upload" icon={Image} label="Images" />
-            <SectionButton id="text" icon={Type} label="Text" />
             <SectionButton id="placeholders" icon={Tag} label="Placeholders" />
             <SectionButton id="history" icon={History} label="History" />
           </div>
@@ -162,38 +152,6 @@ const ImageEditorSidebar = ({
               </div>
             )}
 
-            {/* Text Section */}
-            {activeSection === 'text' && (
-              <div className="space-y-4">
-                <select
-                  value={textType || "p"}
-                  onChange={(e) => setTextType(e.target.value)}
-                  className="w-full p-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-                >
-                  {["h1", "h2", "h3", "h4", "h5", "h6", "p"].map((type) => (
-                    <option key={type} value={type}>{type.toUpperCase()}</option>
-                  ))}
-                </select>
-
-                <input
-                  type="number"
-                  value={textSize || 16}
-                  min="8"
-                  max="100"
-                  onChange={(e) => setTextSize(parseInt(e.target.value))}
-                  className="w-full p-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-                />
-                 <button
-                  onClick={addText}
-                  className="w-full py-2 px-4 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
-                >
-                  <Type className="inline mr-2" /> Add Text
-                </button>
-              </div>
-            )}
-
-         
-
             {/* Placeholders Section */}
             {activeSection === 'placeholders' && (
               <div className="space-y-4">
@@ -202,12 +160,12 @@ const ImageEditorSidebar = ({
                   value={customPlaceholder}
                   onChange={(e) => setCustomPlaceholder(e.target.value)}
                   placeholder="Enter custom placeholder"
-                  className="w-full p-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                  className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
                 />
 
                 <button
                   onClick={handleAddCustomPlaceholder}
-                  className="w-full py-2 px-4 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                  className="w-full py-2 px-4 bg-gray-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                 >
                   Add Custom Placeholder
                 </button>
@@ -215,7 +173,7 @@ const ImageEditorSidebar = ({
                 <select
                   value={selectedPlaceholder}
                   onChange={(e) => setSelectedPlaceholder(e.target.value)}
-                  className="w-full p-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                  className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500"
                 >
                   <option value="">Select a Placeholder</option>
                   {allPlaceholders.map((placeholder, index) => (
@@ -225,7 +183,7 @@ const ImageEditorSidebar = ({
 
                 <button
                   onClick={() => addPlaceholderToCanvas(selectedPlaceholder)}
-                  className="w-full py-2 px-4 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                  className="w-full py-2 px-4 bg-gray-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                 >
                   Add to Canvas
                 </button>

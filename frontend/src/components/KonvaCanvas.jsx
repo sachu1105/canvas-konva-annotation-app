@@ -646,14 +646,14 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders, templates, hand
           <div className="flex gap-2 ml-4">
             <button
               onClick={addText}
-              className="py-2 px-4 border text-sm border-amber-500 text-grey-800 rounded-lg hover:bg-gray-100 transition-colors"
+              className="py-2 px-4 border text-sm border-gray-500 text-grey-800 rounded-lg hover:bg-gray-100 transition-colors"
             >
             Add Text
             </button>
             <select
               onChange={handleShapeChange}
               onClick={handleShapeAdd}
-              className="py-2 px-2 text-sm  border  border-amber-500 text-grey-600 rounded-lg hover:bg-gray-100 transition-colors"
+              className="py-2 px-2 text-sm  border  border-gray-500 text-grey-600 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <option value="">Select Shape</option>
               <option value="rectangle">Rectangle</option>

@@ -93,28 +93,6 @@ const ImageEditorSidebar = ({
     </button>
   );
 
-  const SimpleColorPicker = () => (
-    <div className="space-y-4">
-      <input
-        type="color"
-        value={selectedColor}
-        onChange={(e) => handleColorChange({ hex: e.target.value })}
-        className="w-full h-12 rounded-lg cursor-pointer"
-      />
-      <div className="grid grid-cols-8 gap-2">
-        {['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#000000', '#FFFFFF'].map((color) => (
-          <button
-            key={color}
-            onClick={() => handleColorChange({ hex: color })}
-            className="w-6 h-6 rounded-full border border-gray-200"
-            style={{ backgroundColor: color }}
-            aria-label={`Select color ${color}`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-
   return (
     <aside className={`relative h-screen bg-white transition-all duration-200 shadow-xl ${isCollapsed ? 'w-20' : 'w-80'}`}
       onMouseEnter={() => setIsCollapsed(false)}
@@ -125,12 +103,11 @@ const ImageEditorSidebar = ({
         <div className="p-4 border-b border-amber-100">
           <div className="space-y-2">
             <SectionButton id="canvas" icon={Ruler} label="Canvas" />
+            <SectionButton id="template" icon={Template} label="Template" />
             <SectionButton id="upload" icon={Image} label="Images" />
             <SectionButton id="text" icon={Type} label="Text" />
-            <SectionButton id="color" icon={Palette} label="Color" />
             <SectionButton id="placeholders" icon={Tag} label="Placeholders" />
             <SectionButton id="history" icon={History} label="History" />
-            <SectionButton id="template" icon={Template} label="Template" />
           </div>
         </div>
 
@@ -215,10 +192,7 @@ const ImageEditorSidebar = ({
               </div>
             )}
 
-            {/* Color Section */}
-            {activeSection === 'color' && selectedObjectId !== null && (
-              <SimpleColorPicker />
-            )}
+         
 
             {/* Placeholders Section */}
             {activeSection === 'placeholders' && (

@@ -584,24 +584,17 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders, templates, hand
             draggable: true,
           },
         };
-      } else if (element.type === 'image') {
-        const img = new window.Image();
-        img.src = element.src;
-        return {
-          id,
-          type: 'image',
-          ref,
-          attrs: {
-            ...element,
-            image: img,
-            draggable: true,
-          },
-        };
       }
       return null;
     }).filter(Boolean);
-    setObjects(newObjects);
-    addToHistory(newObjects);
+
+    const img = new window.Image();
+    img.src = template.preview;
+    img.onload = () => {
+      setImage(img); // Set the template image as the background
+      setObjects(newObjects); // Add text elements on top of the background
+      addToHistory(newObjects);
+    };
   };
 
   useEffect(() => {

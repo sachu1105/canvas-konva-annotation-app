@@ -15,7 +15,7 @@ import {
 import { Undo, Redo, Trash2, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight } from "lucide-react"; // Add text formatting icons
 import Select from 'react-select'; // Add react-select for font family dropdown
 
-const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders }) => {
+const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders, templates, handleTemplateLoad, selectedTemplate }) => {
   const [imageUrl, setImageUrl] = useState(null); // Stores the uploaded image URL
   const [image, setImage] = useState(null); // Stores the Image object
   const [objects, setObjects] = useState([]); // Stores the list of added objects (shapes, text)
@@ -83,6 +83,8 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders }) => {
     }
   }, [selectedObjectId, objects]);
 
+
+  //History Undo and redo
   const addToHistory = (newObjects) => {
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push(newObjects);
@@ -104,6 +106,7 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders }) => {
     }
   };
 
+  //shapes logics 
   const addRectangle = () => {
     const id = Date.now(); // Unique ID for the rectangle
     const rectRef = React.createRef(); // Reference for the rectangle
@@ -566,6 +569,47 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders }) => {
     }
   };
 
+  const loadTemplate = (template) => {
+    if (!template || !template.elements) return;
+    const newObjects = template.elements.map((element) => {
+      const id = Date.now() + Math.random(); // Unique ID for each element
+      const ref = React.createRef();
+      if (element.type === 'text') {
+        return {
+          id,
+          type: 'text',
+          ref,
+          attrs: {
+            ...element,
+            draggable: true,
+          },
+        };
+      } else if (element.type === 'image') {
+        const img = new window.Image();
+        img.src = element.src;
+        return {
+          id,
+          type: 'image',
+          ref,
+          attrs: {
+            ...element,
+            image: img,
+            draggable: true,
+          },
+        };
+      }
+      return null;
+    }).filter(Boolean);
+    setObjects(newObjects);
+    addToHistory(newObjects);
+  };
+
+  useEffect(() => {
+    if (selectedTemplate) {
+      loadTemplate(selectedTemplate);
+    }
+  }, [selectedTemplate]);
+
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
@@ -598,23 +642,25 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders }) => {
         undo={undo}
         redo={redo}
         handleTemplateClick={handleTemplateClick}
+        templates={templates} // Pass templates as a prop
+        handleTemplateLoad={loadTemplate} // Pass loadTemplate as a prop
       />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col bg-gray-200 overflow-hidden">
         <div className="flex justify-between items-center w-full p-4 bg-white shadow-md z-10">
           {/* Add Text and Shape dropdowns to the top navbar */}
-          <div className="flex gap-2 ml-8">
+          <div className="flex gap-2 ml-4">
             <button
               onClick={addText}
-              className="py-2 px-4 border border-amber-500 text-grey-800 rounded-lg hover:bg-gray-100 transition-colors"
+              className="py-2 px-4 border text-sm border-amber-500 text-grey-800 rounded-lg hover:bg-gray-100 transition-colors"
             >
             Add Text
             </button>
             <select
               onChange={handleShapeChange}
               onClick={handleShapeAdd}
-              className="py-2 px-4  border  border-amber-500 text-grey-600 rounded-lg hover:bg-gray-100 transition-colors"
+              className="py-2 px-2 text-sm  border  border-amber-500 text-grey-600 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <option value="">Select Shape</option>
               <option value="rectangle">Rectangle</option>
@@ -634,7 +680,7 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders }) => {
 
           {/* Text formatting options */}
           {selectedObjectId !== null && objects.find((obj) => obj.id === selectedObjectId)?.type === "text" && (
-            <div className="flex gap-2 ml-8">
+            <div className="flex gap-2 mr-8 ml-4">
               <button
                 onClick={() => handleTextFormatting("bold")}
                 className={`py-2 px-4 border ${isBold ? "bg-gray-300" : "bg-gray-100"} text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
@@ -712,7 +758,7 @@ const KonvaCanvas = ({ addCustomPlaceholder, customPlaceholders }) => {
             </button>
             <button
               onClick={deleteAnnotation}
-              className="py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
+              className="py-2 px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-red-600 hover:text-white transition-colors cursor-pointer"
             >
               <Trash2 className="inline" />
             </button>

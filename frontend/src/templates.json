@@ -1,0 +1,52 @@
+[
+  {
+    "id": "template1",
+    "name": "Certificate 1",
+    "preview": "https://letsenhance.io/static/8f5e523ee6b2479e26ecc91b9c25261e/1015f/MainAfter.jpg",
+    "elements": [
+      {
+        "type": "text",
+        "x": 100,
+        "y": 50,
+        "text": "Certificate of Completion",
+        "fontSize": 32,
+        "fontFamily": "Arial",
+        "fill": "black"
+      },
+      {
+        "type": "image",
+        "x": 50,
+        "y": 200,
+        "src": "https://letsenhance.io/static/8f5e523ee6b2479e26ecc91b9c25261e/1015f/MainAfter.jpg",
+        "width": 100,
+        "height": 100
+      }
+    ]
+  },
+  {
+    "id": "template2",
+    "name": "Certificate 2",
+    "preview": "https://m.media-amazon.com/images/I/71hI16-vr6L.jpg",
+    "elements": [
+      {
+        "type": "text",
+        "x": 120,
+        "y": 70,
+        "text": "Certificate of Achievement",
+        "fontSize": 36,
+        "fontFamily": "Times New Roman",
+        "fill": "blue"
+      },
+      {
+        "type": "image",
+        "x": 50,
+        "y": 200,
+        "src": "https://m.media-amazon.com/images/I/71hI16-vr6L.jpg",
+        "width": 100,
+        "height": 100
+      }
+    ]
+  }
+ 
+
+]

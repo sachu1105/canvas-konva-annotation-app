@@ -9,6 +9,7 @@ import {
   Save,
   Download,
   Plus,
+  FileText as Template,
 } from "lucide-react";
 
 const ImageEditorSidebar = ({
@@ -32,8 +33,9 @@ const ImageEditorSidebar = ({
   customPlaceholders = [], // Provide default empty array
   addPlaceholderToCanvas,
   onSectionChange, // Add this prop
-  handleShapeAdd,
   addText,
+  templates, // Add templates prop
+  handleTemplateLoad, // Add handleTemplateLoad prop
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState('upload');
@@ -80,7 +82,7 @@ const ImageEditorSidebar = ({
   const SectionButton = ({ id, icon: Icon, label }) => (
     <button
       onClick={() => handleSectionChange(id)} // Use handleSectionChange
-      className={`flex items-center w-full p-3 rounded-lg transition-all duration-200 ${
+      className={`flex items-center w-full p-3 rounded-lg transition-all duration-300 ${
         activeSection === id 
           ? 'bg-amber-100 text-amber-800' 
           : 'hover:bg-amber-50 text-gray-600'
@@ -114,23 +116,10 @@ const ImageEditorSidebar = ({
   );
 
   return (
-    <aside className={`relative h-screen bg-white transition-all duration-2
-      00 shadow-xl 
-      ${isCollapsed ? 'w-20' : 'w-80'}`}
-      
+    <aside className={`relative h-screen bg-white transition-all duration-200 shadow-xl ${isCollapsed ? 'w-20' : 'w-80'}`}
       onMouseEnter={() => setIsCollapsed(false)}
       onMouseLeave={() => setIsCollapsed(true)}
-      >
-        
-      
-      {/* Collapse Toggle */}
-      {/* <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-8 bg-amber-500 text-white p-1 rounded-full shadow-lg z-50"
-      >
-        {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-      </button> */}
-
+    >
       <div className="h-full flex flex-col">
         {/* Navigation */}
         <div className="p-4 border-b border-amber-100">
@@ -138,10 +127,10 @@ const ImageEditorSidebar = ({
             <SectionButton id="canvas" icon={Ruler} label="Canvas" />
             <SectionButton id="upload" icon={Image} label="Images" />
             <SectionButton id="text" icon={Type} label="Text" />
-            {/* <SectionButton id="shapes" icon={Shapes} label="Shapes" /> */}
             <SectionButton id="color" icon={Palette} label="Color" />
             <SectionButton id="placeholders" icon={Tag} label="Placeholders" />
             <SectionButton id="history" icon={History} label="History" />
+            <SectionButton id="template" icon={Template} label="Template" />
           </div>
         </div>
 
@@ -226,29 +215,6 @@ const ImageEditorSidebar = ({
               </div>
             )}
 
-            {/* Shapes Section */}
-            {/* {activeSection === 'shapes' && (
-              <div className="space-y-4">
-                <select
-                  value={selectedShape}
-                  onChange={handleShapeChange}
-                  className="w-full p-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-                >
-                  <option value="">Select a Shape</option>
-                  {["rectangle", "circle", "star", "line", "arrow"].map((shape) => (
-                    <option key={shape} value={shape}>{shape}</option>
-                  ))}
-                </select>
-                
-                <button
-                  onClick={handleShapeAdd}
-                  className="w-full py-2 px-4 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
-                >
-                  Add Shape
-                </button>
-              </div>
-            )} */}
-
             {/* Color Section */}
             {activeSection === 'color' && selectedObjectId !== null && (
               <SimpleColorPicker />
@@ -311,12 +277,7 @@ const ImageEditorSidebar = ({
                   >
                     <Plus className="inline" /> Width
                   </button>
-                  {/* <button
-                    onClick={() => handleCanvasResize(canvasSize.width - 50, canvasSize.height)}
-                    className="py-2 px-4 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
-                  >
-                    <Minus className="inline" /> Width
-                  </button> */}
+                
                     <button onClick={() => handleCanvasResize(canvasSize.width, canvasSize.height + 50)}
                     className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200">
                     <Plus size={16} className="inline mr-1" /> Height
@@ -359,6 +320,28 @@ const ImageEditorSidebar = ({
                     <p className="col-span-2 text-sm text-gray-500 text-center py-4">
                       No recent saves
                     </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Template Section */}
+            {activeSection === 'template' && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-medium mb-4">Templates</h2>
+                <div className="space-y-4 overflow-y-auto">
+                  {templates && templates.length > 0 ? (
+                    templates.map((template) => (
+                      <div key={template.id} className="border rounded-lg p-4 shadow-sm">
+                        <img src={template.preview} alt={template.name} className="w-full h-32 object-cover mb-2" />
+                        <h3 className="text-md font-medium">{template.name}</h3>
+                        <button onClick={() => handleTemplateLoad(template)} className="mt-2 py-1 px-4 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors">
+                          Load
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500">No templates available</p>
                   )}
                 </div>
               </div>

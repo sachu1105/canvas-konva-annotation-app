@@ -22,7 +22,7 @@ import {
   Undo,
   Redo,
   Trash2,
-  Type,
+  Save,
   Palette,
 } from "lucide-react"; // Add text formatting icons
 import Select from "react-select"; // Add react-select for font family dropdown
@@ -625,6 +625,8 @@ const KonvaCanvas = ({
     }
   }, [selectedTemplate]);
 
+
+  //global toolbar for buttons
   const ToolbarButton = ({ onClick, active, disabled, icon: Icon, label }) => (
     <button
       onClick={onClick}
@@ -791,6 +793,11 @@ const KonvaCanvas = ({
 
           {/* Move undo, redo, and delete buttons to the top right corner */}
           <div className="flex gap-2 ml-auto">
+            <ToolbarButton 
+            onClick={saveCanvas} 
+            icon={Save} 
+            label="Save" 
+            />
             <ToolbarButton
               onClick={undo}
               disabled={!undo || historyIndex <= 0}

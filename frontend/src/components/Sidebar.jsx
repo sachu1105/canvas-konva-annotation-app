@@ -9,6 +9,9 @@ import {
   Download,
   Plus,
   FileText as Template,
+  ZoomIn,
+  ZoomOut,
+  RefreshCw,
 } from "lucide-react";
 
 const ImageEditorSidebar = ({
@@ -27,6 +30,9 @@ const ImageEditorSidebar = ({
   onSectionChange, // Add this prop
   templates, // Add templates prop
   handleTemplateLoad, // Add handleTemplateLoad prop
+  handleZoomIn,
+  handleZoomOut,
+  handleZoomReset,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState("upload");
@@ -57,13 +63,13 @@ const ImageEditorSidebar = ({
   };
 
   const predefinedSizes = {
-    A1: { width: 841, height: 1189 },
-    A2: { width: 594, height: 841 },
-    A3: { width: 420, height: 594 },
-    A4: { width: 297, height: 420 },
-    A5: { width: 210, height: 297 },
-    Certificate: { width: 1123, height: 794 },
     Normal: { width: 800, height: 600 },
+    A4Landscape: { width: 297, height: 210 },
+    A4Portrait: { width: 210, height: 297 },
+    LetterLandscape: { width: 279, height: 216 },
+    LetterPortrait: { width: 216, height: 279 },
+    LegalLandscape: { width: 356, height: 216 },
+    LegalPortrait: { width: 216, height: 356 },
   };
 
   const handlePredefinedSizeChange = (e) => {

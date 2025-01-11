@@ -24,6 +24,9 @@ import {
   Trash2,
   Save,
   Palette,
+  ZoomIn,
+  ZoomOut,
+  RefreshCw,
 } from "lucide-react"; // Add text formatting icons
 import Select from "react-select"; // Add react-select for font family dropdown
 
@@ -38,7 +41,7 @@ const KonvaCanvas = ({
   const [image, setImage] = useState(null); // Stores the Image object
   const [objects, setObjects] = useState([]); // Stores the list of added objects (shapes, text)
   const [selectedObjectId, setSelectedObjectId] = useState(null); // Tracks the currently selected object
-  const [textEditing, setTextEditing] = useState({ id: null, value: "" }); // Tracks text being edited
+  const [textEditing, setTextEditing] = useState({ id: null, value: "", x: 0, y: 0, width: 0, fontSize: 20, fontFamily: "Arial", color: "#000000" }); // Tracks text being edited
   const [textType, setTextType] = useState("p"); // Default to <p>
   const [textSize, setTextSize] = useState(20); // Default font size
   const [texts, setTexts] = useState([]); // Store the texts
@@ -54,6 +57,7 @@ const KonvaCanvas = ({
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderline, setIsUnderline] = useState(false);
   const [textAlign, setTextAlign] = useState("left");
+  const [zoom, setZoom] = useState(1); // Add zoom state
   // Refs for stage (canvas container) and transformer
   const stageRef = useRef(null);
   const transformerRef = useRef(null);
@@ -429,14 +433,16 @@ const KonvaCanvas = ({
       (obj) => obj.id === id && obj.type === "text"
     );
     if (selectedText) {
+      const { x, y, width, text, fontSize, fontFamily, fill } = selectedText.attrs;
       setTextEditing({
         id,
-        value: selectedText.attrs.text,
-        x: selectedText.attrs.x,
-        y: selectedText.attrs.y,
-        fontSize: selectedText.attrs.fontSize,
-        fontFamily: selectedText.attrs.fontFamily,
-        color: selectedText.attrs.fill,
+        value: text,
+        x,
+        y,
+        width,
+        fontSize,
+        fontFamily,
+        color: fill,
       }); // Set the current text and position for editing
     }
   };
@@ -611,6 +617,47 @@ const KonvaCanvas = ({
     }
   }, [selectedTemplate]);
 
+  const handleZoom = (newZoom) => {
+    const stage = stageRef.current;
+    const oldZoom = zoom;
+    const mousePointTo = {
+      x: stage.getPointerPosition().x / oldZoom - stage.x() / oldZoom,
+      y: stage.getPointerPosition().y / oldZoom - stage.y() / oldZoom,
+    };
+
+    setZoom(newZoom);
+
+    const newPos = {
+      x: -(mousePointTo.x - stage.getPointerPosition().x / newZoom) * newZoom,
+      y: -(mousePointTo.y - stage.getPointerPosition().y / newZoom) * newZoom,
+    };
+
+    stage.position(newPos);
+    stage.batchDraw();
+  };
+
+  // Function to handle zoom in
+  const handleZoomIn = () => {
+    handleZoom(Math.min(zoom + 0.1, 3)); // Limit max zoom level to 3
+  };
+
+  // Function to handle zoom out
+  const handleZoomOut = () => {
+    handleZoom(Math.max(zoom - 0.1, 0.5)); // Limit min zoom level to 0.5
+  };
+
+  // Function to reset zoom
+  const handleZoomReset = () => {
+    handleZoom(1);
+  };
+
+  // Adjust canvas size and position to stay centered
+  const getCanvasStyle = () => {
+    return {
+      transform: `scale(${zoom})`,
+      transformOrigin: 'center center',
+    };
+  };
 
   //global toolbar for buttons
   const ToolbarButton = ({ onClick, active, disabled, icon: Icon, label }) => (
@@ -660,6 +707,9 @@ const KonvaCanvas = ({
         handleTemplateClick={handleTemplateClick}
         templates={templates} // Pass templates as a prop
         handleTemplateLoad={loadTemplate} // Pass loadTemplate as a prop
+        handleZoomIn={handleZoomIn} // Pass handleZoomIn as a prop
+        handleZoomOut={handleZoomOut} // Pass handleZoomOut as a prop
+        handleZoomReset={handleZoomReset} // Pass handleZoomReset as a prop
       />
 
       {/* Main Content */}
@@ -805,16 +855,18 @@ const KonvaCanvas = ({
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto p-4 flex justify-center">
+        <div className="flex-1 overflow-auto p-4 flex justify-center items-center  ">
           <div
             className="relative bg-white shadow-xl rounded"
-            style={{ width: canvasSize.width, height: canvasSize.height }}
+            style={{ width: canvasSize.width, height: canvasSize.height, ...getCanvasStyle() }}
           >
             <Stage
               width={canvasSize.width}
               height={canvasSize.height}
               ref={stageRef}
               onClick={handleStageClick}
+              scaleX={zoom}
+              scaleY={zoom}
             >
               <Layer>
                 {/* Render uploaded image */}
@@ -823,8 +875,8 @@ const KonvaCanvas = ({
                     image={image}
                     x={0}
                     y={0}
-                    width={canvasSize.width}
-                    height={canvasSize.height}
+                    width={canvasSize.width / zoom}
+                    height={canvasSize.height / zoom}
                   />
                 )}
 
@@ -972,7 +1024,6 @@ const KonvaCanvas = ({
                   zIndex: 10,
                   resize: "none",
                   outline: "none",
-                  border: "1px solid #ccc",
                   fontSize: textEditing.fontSize,
                   fontFamily: textEditing.fontFamily,
                   color: textEditing.color,
@@ -980,12 +1031,34 @@ const KonvaCanvas = ({
                   width: textEditing.width, // Set width for textarea
                 }}
                 value={textEditing.value}
-                onChange={handleTextChange}
+                onChange={(e) => setTextEditing({ ...textEditing, value: e.target.value })}
                 onBlur={saveEditedText} // Save text on blur
                 autoFocus
               />
             )}
           </div>
+        </div>
+
+        {/* Floating Zoom Buttons */}
+        <div className="fixed bottom-4 right-4 flex flex-col space-y-2">
+          <button
+            onClick={handleZoomIn}
+            className="p-3 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 transition-colors"
+          >
+            <ZoomIn size={20} />
+          </button>
+          <button
+            onClick={handleZoomOut}
+            className="p-3 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 transition-colors"
+          >
+            <ZoomOut size={20} />
+          </button>
+          <button
+            onClick={handleZoomReset}
+            className="p-3 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 transition-colors"
+          >
+            <RefreshCw size={20} />
+          </button>
         </div>
       </div>
     </div>

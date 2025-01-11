@@ -360,32 +360,6 @@ const KonvaCanvas = ({
     const id = Date.now(); // Unique ID for the text
     const textRef = React.createRef(); // Reference for the text
 
-    const calculateFontSize = (text, maxWidth, baseFontSize) => {
-      const context = document.createElement("canvas").getContext("2d");
-      let fontSize = baseFontSize; // Start with the base font size
-      context.font = `${fontSize}px Arial`;
-      while (context.measureText(text).width > maxWidth && fontSize > 0) {
-        fontSize -= 1;
-        context.font = `${fontSize}px Arial`;
-      }
-      return fontSize;
-    };
-
-    const maxWidth = 300; // Set your desired maximum width here
-
-    // Font sizes for different text types
-    const textSizes = {
-      h1: 32,
-      h2: 28,
-      h3: 24,
-      h4: 20,
-      h5: 18,
-      h6: 16,
-      p: 14,
-    };
-
-    const baseFontSize = textSizes[textType] || 16; // Default to 16px if textType is not set
-
     const newObjects = [
       ...objects,
       {
@@ -393,25 +367,37 @@ const KonvaCanvas = ({
         type: "text",
         ref: textRef,
         attrs: {
-          x: 300,
-          y: 300,
-          text: "Double-click to edit", // Initial text
-          fontSize: calculateFontSize(
-            "Double-click to edit",
-            maxWidth,
-            baseFontSize
-          ), // Set font size
-          fontFamily: "Arial", // Optional: Set font family
-          fontStyle: textType === "h1" ? "bold" : "normal", // Optional: Bold for h1
+          x: 100,
+          y: 100,
+          text: "Double-click to edit",
+          fontSize: 20,
+          fontFamily: "Arial",
           draggable: true,
-          fill: "#000000", // Apply selected color
-          width: maxWidth, // Set initial width
+          fill: "#000000",
+          width: 200, // Default width
           wrap: "word", // Enable word wrapping
         },
       },
     ];
     setObjects(newObjects);
     addToHistory(newObjects);
+  };
+
+  const handleTextResize = (id, newWidth) => {
+    const updatedObjects = objects.map((obj) =>
+      obj.id === id && obj.type === "text"
+        ? { ...obj, attrs: { ...obj.attrs, width: newWidth } }
+        : obj
+    );
+    setObjects(updatedObjects);
+    addToHistory(updatedObjects);
+  };
+
+  const handleTransformEnd = (id, e) => {
+    const node = e.target;
+    const newWidth = node.width() * node.scaleX();
+    node.scaleX(1);
+    handleTextResize(id, newWidth);
   };
 
   // Update text after editing
@@ -937,21 +923,13 @@ const KonvaCanvas = ({
                       return (
                         <Text
                           key={obj.id}
-                          text={obj.attrs.text}
-                          fontSize={obj.attrs.fontSize}
-                          fontFamily={obj.attrs.fontFamily}
-                          fontStyle={obj.attrs.fontStyle}
-                          textDecoration={obj.attrs.textDecoration}
-                          align={obj.attrs.align}
-                          x={obj.attrs.x}
-                          y={obj.attrs.y}
-                          draggable={obj.attrs.draggable}
-                          fill={obj.attrs.fill}
+                          {...obj.attrs}
                           ref={obj.ref}
                           onClick={() => setSelectedObjectId(obj.id)}
                           onDblClick={() => handleTextDoubleClick(obj.id)}
                           onDragMove={(e) => handleDragMove(obj.id, e)}
                           onDragEnd={(e) => handleDragEnd(obj.id, e)}
+                          onTransformEnd={(e) => handleTransformEnd(obj.id, e)}
                         />
                       );
 
@@ -968,6 +946,18 @@ const KonvaCanvas = ({
                       objects.find((obj) => obj.id === selectedObjectId)?.ref
                         .current
                     }
+                    enabledAnchors={[
+                      "top-left",
+                      "top-right",
+                      "bottom-left",
+                      "bottom-right",
+                      "middle-left",
+                      "middle-right",
+                    ]}
+                    boundBoxFunc={(oldBox, newBox) => {
+                      newBox.width = Math.max(30, newBox.width);
+                      return newBox;
+                    }}
                   />
                 )}
               </Layer>
@@ -987,6 +977,7 @@ const KonvaCanvas = ({
                   fontFamily: textEditing.fontFamily,
                   color: textEditing.color,
                   background: "transparent", // Transparent background for the textarea
+                  width: textEditing.width, // Set width for textarea
                 }}
                 value={textEditing.value}
                 onChange={handleTextChange}

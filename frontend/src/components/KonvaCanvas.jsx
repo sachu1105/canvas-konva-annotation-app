@@ -41,7 +41,16 @@ const KonvaCanvas = ({
   const [image, setImage] = useState(null); // Stores the Image object
   const [objects, setObjects] = useState([]); // Stores the list of added objects (shapes, text)
   const [selectedObjectId, setSelectedObjectId] = useState(null); // Tracks the currently selected object
-  const [textEditing, setTextEditing] = useState({ id: null, value: "", x: 0, y: 0, width: 0, fontSize: 20, fontFamily: "Arial", color: "#000000" }); // Tracks text being edited
+  const [textEditing, setTextEditing] = useState({
+    id: null,
+    value: "",
+    x: 0,
+    y: 0,
+    width: 0,
+    fontSize: 20,
+    fontFamily: "Arial",
+    color: "#000000",
+  }); // Tracks text being edited
   const [textType, setTextType] = useState("p"); // Default to <p>
   const [textSize, setTextSize] = useState(20); // Default font size
   const [texts, setTexts] = useState([]); // Store the texts
@@ -421,7 +430,10 @@ const KonvaCanvas = ({
 
   // Deselect object when clicking outside
   const handleStageClick = (e) => {
-    if (e.target === e.target.getStage() || e.target.attrs.id === 'background-image') {
+    if (
+      e.target === e.target.getStage() ||
+      e.target.attrs.id === "background-image"
+    ) {
       setSelectedObjectId(null); // Deselect if clicking outside shapes or on the background image
       setTextEditing({ id: null, value: "" }); // Stop editing text
     }
@@ -433,7 +445,8 @@ const KonvaCanvas = ({
       (obj) => obj.id === id && obj.type === "text"
     );
     if (selectedText) {
-      const { x, y, width, text, fontSize, fontFamily, fill } = selectedText.attrs;
+      const { x, y, width, text, fontSize, fontFamily, fill } =
+        selectedText.attrs;
       setTextEditing({
         id,
         value: text,
@@ -619,22 +632,26 @@ const KonvaCanvas = ({
 
   const handleZoom = (newZoom) => {
     const stage = stageRef.current;
-  
+
     // Get current pointer position relative to the stage
     const mousePointTo = {
       x: (stage.getPointerPosition()?.x ?? 0) / zoom - stage.x() / zoom,
       y: (stage.getPointerPosition()?.y ?? 0) / zoom - stage.y() / zoom,
     };
-  
+
     // Set the new zoom value
     setZoom(newZoom);
-  
+
     // Adjust the stage's position to simulate zooming into the pointer
     const newPos = {
-      x: -(mousePointTo.x - (stage.getPointerPosition()?.x ?? 0) / newZoom) * newZoom,
-      y: -(mousePointTo.y - (stage.getPointerPosition()?.y ?? 0) / newZoom) * newZoom,
+      x:
+        -(mousePointTo.x - (stage.getPointerPosition()?.x ?? 0) / newZoom) *
+        newZoom,
+      y:
+        -(mousePointTo.y - (stage.getPointerPosition()?.y ?? 0) / newZoom) *
+        newZoom,
     };
-  
+
     stage.scale({ x: newZoom, y: newZoom });
     stage.position(newPos);
     stage.batchDraw();
@@ -659,7 +676,7 @@ const KonvaCanvas = ({
   const getCanvasStyle = () => {
     return {
       transform: `scale(${zoom})`,
-      transformOrigin: 'center center',
+      transformOrigin: "center center",
     };
   };
 
@@ -762,7 +779,7 @@ const KonvaCanvas = ({
               onClick={addText}
               className="py-2 px-4 border text-sm border-gray-500 text-grey-800 rounded-lg hover:bg-gray-100 transition-colors"
             >
-             Add Text
+              Add Text
             </button>
             <select
               onChange={handleShapeChange}
@@ -870,11 +887,7 @@ const KonvaCanvas = ({
 
           {/* Move undo, redo, and delete buttons to the top right corner */}
           <div className="flex gap-2 ml-auto">
-            <ToolbarButton 
-            onClick={saveCanvas} 
-            icon={Save} 
-            label="Save" 
-            />
+            <ToolbarButton onClick={saveCanvas} icon={Save} label="Save" />
             <ToolbarButton
               onClick={undo}
               disabled={!undo || historyIndex <= 0}
@@ -899,7 +912,11 @@ const KonvaCanvas = ({
         <div className="flex-1 overflow-auto p-4 flex justify-center items-center  ">
           <div
             className="relative bg-white shadow-xl rounded"
-            style={{ width: canvasSize.width, height: canvasSize.height, ...getCanvasStyle() }}
+            style={{
+              width: canvasSize.width,
+              height: canvasSize.height,
+              ...getCanvasStyle(),
+            }}
           >
             <Stage
               width={canvasSize.width}
@@ -1076,7 +1093,9 @@ const KonvaCanvas = ({
                   width: textEditing.width, // Set width for textarea
                 }}
                 value={textEditing.value}
-                onChange={(e) => setTextEditing({ ...textEditing, value: e.target.value })}
+                onChange={(e) =>
+                  setTextEditing({ ...textEditing, value: e.target.value })
+                }
                 onBlur={saveEditedText} // Save text on blur
                 autoFocus
               />

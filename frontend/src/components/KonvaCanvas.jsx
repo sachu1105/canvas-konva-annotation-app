@@ -473,8 +473,7 @@ useEffect(() => {
       (obj) => obj.id === id && obj.type === "text"
     );
     if (selectedText) {
-      const { x, y, width, text, fontSize, fontFamily, fill } =
-        selectedText.attrs;
+      const { x, y, width, text, fontSize, fontFamily, fill } = selectedText.attrs;
       setTextEditing({
         id,
         value: text,
@@ -484,7 +483,12 @@ useEffect(() => {
         fontSize,
         fontFamily,
         color: fill,
-      }); // Set the current text and position for editing
+      });
+      setObjects((prevObjects) =>
+        prevObjects.map((obj) =>
+          obj.id === id ? { ...obj, attrs: { ...obj.attrs, visible: false } } : obj
+        )
+      );
     }
   };
 
@@ -494,7 +498,7 @@ useEffect(() => {
         if (obj.id === textEditing.id && obj.type === "text") {
           return {
             ...obj,
-            attrs: { ...obj.attrs, text: textEditing.value }, // Update the text content
+            attrs: { ...obj.attrs, text: textEditing.value, visible: true },
           };
         }
         return obj;
@@ -1129,6 +1133,8 @@ useEffect(() => {
                   color: textEditing.color,
                   background: "transparent", // Transparent background for the textarea
                   width: textEditing.width, // Set width for textarea
+                  border: "none", // Remove border
+                  overflow: "hidden", // Hide overflow
                 }}
                 value={textEditing.value}
                 onChange={(e) =>

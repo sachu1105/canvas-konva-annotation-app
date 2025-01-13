@@ -27,6 +27,7 @@ import {
   ZoomIn,
   ZoomOut,
   RefreshCw,
+  X,
 } from "lucide-react"; // Add text formatting icons
 import Select from "react-select"; // Add react-select for font family dropdown
 
@@ -902,7 +903,15 @@ const KonvaCanvas = ({
 
           {/* Move undo, redo, and delete buttons to the top right corner */}
           <div className="flex gap-2 ml-auto">
-            <ToolbarButton onClick={saveCanvas} icon={Save} label="Save" />
+
+           
+
+            <ToolbarButton 
+            onClick={saveCanvas} 
+            icon={Save} 
+            label="Save" 
+            />
+
             <ToolbarButton
               onClick={undo}
               disabled={!undo || historyIndex <= 0}
@@ -1149,7 +1158,7 @@ const KonvaCanvas = ({
                 onClick={() => setPreviewImage(null)}
                 className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
               >
-                <Trash2 size={16} />
+                <X size={16} />
               </button>
             </div>
           </div>

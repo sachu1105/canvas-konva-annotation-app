@@ -6,6 +6,7 @@ function App() {
   const [customPlaceholders, setCustomPlaceholders] = useState([]);
   const [activeSection, setActiveSection] = useState('upload'); // Add this state
   const [selectedTemplate, setSelectedTemplate] = useState(null); // State to store the selected template
+  const [previewImage, setPreviewImage] = useState(null); // State to store the preview image
   console.log(templates)
 
 
@@ -15,6 +16,14 @@ function App() {
 
   const handleTemplateLoad = (template) => {
     setSelectedTemplate(template); // Set the selected template
+  };
+
+  const previewSavedCanvas = (image) => {
+    setPreviewImage(image); // Set the preview image
+  };
+
+  const closePreview = () => {
+    setPreviewImage(null); // Close the preview
   };
 
   console.log(templates);
@@ -30,7 +39,9 @@ function App() {
         templates={templates} // Pass templates as a prop
         handleTemplateLoad={handleTemplateLoad} // Pass handleTemplateLoad as a prop
         selectedTemplate={selectedTemplate} // Pass selectedTemplate as a prop
-        
+        previewSavedCanvas={previewSavedCanvas} // Pass previewSavedCanvas as a prop
+        closePreview={closePreview} // Pass closePreview as a prop
+        previewImage={previewImage} // Pass previewImage as a prop
       />
     </div>
   );

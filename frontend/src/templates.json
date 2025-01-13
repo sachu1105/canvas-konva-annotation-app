@@ -30,8 +30,8 @@
     "elements": [
       {
         "type": "text",
-        "x": 150,
-        "y": 70,
+        "x": 220,
+        "y": 125,
         "text": "Certificate of Achievement",
         "fontSize": 36,
         "fontFamily": "Times New Roman",

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Image,
-  Layout,
   Ruler,
   History,
   Tag,
@@ -9,7 +8,7 @@ import {
   Download,
   Plus,
   FileText as Template,
-  
+  Trash2, // Add Trash2 icon for delete functionality
 } from "lucide-react";
 
 const ImageEditorSidebar = ({
@@ -29,6 +28,8 @@ const ImageEditorSidebar = ({
   templates, // Add templates prop
   handleTemplateLoad, // Add handleTemplateLoad prop
   handleZoomReset,
+  deleteSavedCanvas, // Add deleteSavedCanvas prop
+  previewSavedCanvas, // Add previewSavedCanvas prop
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState("upload");
@@ -315,12 +316,20 @@ const ImageEditorSidebar = ({
                 <div className="grid grid-cols-2 gap-2">
                   {recentlySaved && recentlySaved.length > 0 ? (
                     recentlySaved.map((save, index) => (
-                      <img
-                        key={index}
-                        src={save}
-                        alt={`Save ${index}`}
-                        className="w-full h-24 object-cover rounded-lg border border-amber-200"
-                      />
+                      <div key={index} className="relative">
+                        <img
+                          src={save}
+                          alt={`Save ${index}`}
+                          className="w-full h-24 object-cover rounded-lg border border-amber-200 cursor-pointer"
+                          onClick={() => previewSavedCanvas(save)}
+                        />
+                        <button
+                          onClick={() => deleteSavedCanvas(index)}
+                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     ))
                   ) : (
                     <p className="col-span-2 text-sm text-gray-500 text-center py-4">

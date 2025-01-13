@@ -67,6 +67,7 @@ const KonvaCanvas = ({
   const [isUnderline, setIsUnderline] = useState(false);
   const [textAlign, setTextAlign] = useState("left");
   const [zoom, setZoom] = useState(1); // Add zoom state
+  const [previewImage, setPreviewImage] = useState(null); // State to store the preview image
   // Refs for stage (canvas container) and transformer
   const stageRef = useRef(null);
   const transformerRef = useRef(null);
@@ -320,9 +321,21 @@ const KonvaCanvas = ({
     }
   };
 
+
+  //function to save edited canvas to the recently saved
   const saveCanvas = () => {
     const stage = stageRef.current.toDataURL();
     setRecentlySaved((prev) => [...prev, stage]);
+  };
+
+  // Function to delete a saved canvas
+  const deleteSavedCanvas = (index) => {
+    setRecentlySaved((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Function to preview a saved canvas
+  const previewSavedCanvas = (image) => {
+    setPreviewImage(image);
   };
 
   // Handle object selection
@@ -768,6 +781,8 @@ const KonvaCanvas = ({
         handleZoomIn={handleZoomIn} // Pass handleZoomIn as a prop
         handleZoomOut={handleZoomOut} // Pass handleZoomOut as a prop
         handleZoomReset={handleZoomReset} // Pass handleZoomReset as a prop
+        deleteSavedCanvas={deleteSavedCanvas} // Pass deleteSavedCanvas as a prop
+        previewSavedCanvas={previewSavedCanvas} // Pass previewSavedCanvas as a prop
       />
 
       {/* Main Content */}
@@ -1124,6 +1139,21 @@ const KonvaCanvas = ({
             <RefreshCw size={20} />
           </button>
         </div>
+
+        {/* Preview Modal */}
+        {previewImage && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div className="relative bg-white p-4 rounded-lg shadow-lg">
+              <img src={previewImage} alt="Preview" className="max-w-full max-h-full" />
+              <button
+                onClick={() => setPreviewImage(null)}
+                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

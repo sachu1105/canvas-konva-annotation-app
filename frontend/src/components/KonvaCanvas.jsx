@@ -421,8 +421,8 @@ const KonvaCanvas = ({
 
   // Deselect object when clicking outside
   const handleStageClick = (e) => {
-    if (e.target === e.target.getStage()) {
-      setSelectedObjectId(null); // Deselect if clicking outside shapes
+    if (e.target === e.target.getStage() || e.target.attrs.id === 'background-image') {
+      setSelectedObjectId(null); // Deselect if clicking outside shapes or on the background image
       setTextEditing({ id: null, value: "" }); // Stop editing text
     }
   };
@@ -673,6 +673,43 @@ const KonvaCanvas = ({
     </button>
   );
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+        return; // Ignore key events when typing in input or textarea
+      }
+
+      switch (e.key) {
+        case "Delete":
+        case "Backspace":
+          deleteAnnotation();
+          break;
+        case "z":
+          if (e.ctrlKey || e.metaKey) {
+            undo();
+          }
+          break;
+        case "y":
+          if (e.ctrlKey || e.metaKey) {
+            redo();
+          }
+          break;
+        case "Enter":
+          if (textEditing.id) {
+            saveEditedText();
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [textEditing, selectedObjectId, objects]);
+
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
@@ -721,7 +758,7 @@ const KonvaCanvas = ({
               onClick={addText}
               className="py-2 px-4 border text-sm border-gray-500 text-grey-800 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              Add Text
+             Add Text
             </button>
             <select
               onChange={handleShapeChange}
@@ -872,11 +909,15 @@ const KonvaCanvas = ({
                 {/* Render uploaded image */}
                 {image && (
                   <Image
+                    id="background-image"
                     image={image}
                     x={0}
                     y={0}
-                    width={canvasSize.width / zoom}
-                    height={canvasSize.height / zoom}
+                    width={canvasSize.width}
+                    height={canvasSize.height}
+                    scaleX={zoom}
+                    scaleY={zoom}
+                    onClick={handleStageClick} // Ensure background image click clears transformer
                   />
                 )}
 

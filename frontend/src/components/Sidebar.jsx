@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Image,
   Layout,
@@ -9,9 +9,7 @@ import {
   Download,
   Plus,
   FileText as Template,
-  ZoomIn,
-  ZoomOut,
-  RefreshCw,
+  
 } from "lucide-react";
 
 const ImageEditorSidebar = ({
@@ -30,8 +28,6 @@ const ImageEditorSidebar = ({
   onSectionChange, // Add this prop
   templates, // Add templates prop
   handleTemplateLoad, // Add handleTemplateLoad prop
-  handleZoomIn,
-  handleZoomOut,
   handleZoomReset,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -63,7 +59,7 @@ const ImageEditorSidebar = ({
   };
 
   const predefinedSizes = {
-    Normal: { width: 800, height: 600 },
+    // Normal: { width: 800, height: 600 },
     A4Landscape: { width: 297, height: 210 },
     A4Portrait: { width: 210, height: 297 },
     LetterLandscape: { width: 279, height: 216 },
@@ -76,6 +72,7 @@ const ImageEditorSidebar = ({
     const selectedSize = predefinedSizes[e.target.value];
     if (selectedSize) {
       handleCanvasResize(selectedSize.width, selectedSize.height);
+      handleZoomReset(); // Reset zoom to default level
     }
   };
 
@@ -104,6 +101,35 @@ const ImageEditorSidebar = ({
       </span>
     </button>
   );
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      switch (e.key) {
+        case "1":
+          handleSectionChange("canvas");
+          break;
+        case "2":
+          handleSectionChange("template");
+          break;
+        case "3":
+          handleSectionChange("upload");
+          break;
+        case "4":
+          handleSectionChange("placeholders");
+          break;
+        case "5":
+          handleSectionChange("history");
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   return (
     <aside

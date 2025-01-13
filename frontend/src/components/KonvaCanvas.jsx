@@ -619,19 +619,23 @@ const KonvaCanvas = ({
 
   const handleZoom = (newZoom) => {
     const stage = stageRef.current;
-    const oldZoom = zoom;
+  
+    // Get current pointer position relative to the stage
     const mousePointTo = {
-      x: stage.getPointerPosition().x / oldZoom - stage.x() / oldZoom,
-      y: stage.getPointerPosition().y / oldZoom - stage.y() / oldZoom,
+      x: (stage.getPointerPosition()?.x ?? 0) / zoom - stage.x() / zoom,
+      y: (stage.getPointerPosition()?.y ?? 0) / zoom - stage.y() / zoom,
     };
-
+  
+    // Set the new zoom value
     setZoom(newZoom);
-
+  
+    // Adjust the stage's position to simulate zooming into the pointer
     const newPos = {
-      x: -(mousePointTo.x - stage.getPointerPosition().x / newZoom) * newZoom,
-      y: -(mousePointTo.y - stage.getPointerPosition().y / newZoom) * newZoom,
+      x: -(mousePointTo.x - (stage.getPointerPosition()?.x ?? 0) / newZoom) * newZoom,
+      y: -(mousePointTo.y - (stage.getPointerPosition()?.y ?? 0) / newZoom) * newZoom,
     };
-
+  
+    stage.scale({ x: newZoom, y: newZoom });
     stage.position(newPos);
     stage.batchDraw();
   };
@@ -750,8 +754,8 @@ const KonvaCanvas = ({
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col bg-gray-200 overflow-hidden">
-        <div className="flex justify-between items-center w-full p-4 bg-white shadow-md z-10">
+      <div className="flex-1 flex flex-col bg-[#f7f7f7] overflow-hidden">
+        <div className="flex justify-between items-center w-full p-4 bg-white shadow-lg z-10">
           {/* Add Text and Shape dropdowns to the top navbar */}
           <div className="flex gap-2 ml-4">
             <button

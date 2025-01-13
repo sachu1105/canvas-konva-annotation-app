@@ -59,7 +59,6 @@ const ImageEditorSidebar = ({
   };
 
   const predefinedSizes = {
-    // Normal: { width: 800, height: 600 },
     A4Landscape: { width: 297, height: 210 },
     A4Portrait: { width: 210, height: 297 },
     LetterLandscape: { width: 279, height: 216 },
@@ -231,9 +230,10 @@ const ImageEditorSidebar = ({
                 <select
                   value={selectedPlaceholder}
                   onChange={(e) => setSelectedPlaceholder(e.target.value)}
+                  onClick={() => addPlaceholderToCanvas(selectedPlaceholder)}
                   className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500 shadow-sm"
                 >
-                  <option value="">Select a Placeholder</option>
+                  <option value="">Add Placeholder to Canvas</option>
                   {allPlaceholders.map((placeholder, index) => (
                     <option key={index} value={placeholder}>
                       {placeholder}
@@ -242,13 +242,12 @@ const ImageEditorSidebar = ({
                 </select>
 
                 {/* Add to Canvas Button */}
-                <button
-                  onClick={() => addPlaceholderToCanvas(selectedPlaceholder)}
+                {/* <button
                   className="flex items-center justify-center gap-2 w-full py-2 px-4 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-transform transform hover:scale-105"
                   aria-label="Add placeholder to canvas"
                 >
                   <Layout size={20} /> Add to Canvas
-                </button>
+                </button> */}
               </div>
             )}
             {/* Canvas Section */}

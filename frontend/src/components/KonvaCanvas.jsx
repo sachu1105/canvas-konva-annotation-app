@@ -323,16 +323,30 @@ const KonvaCanvas = ({
   };
 
 
-  //function to save edited canvas to the recently saved
-  const saveCanvas = () => {
-    const stage = stageRef.current.toDataURL();
-    setRecentlySaved((prev) => [...prev, stage]);
-  };
+// Function to save edited canvas to the recently saved and local storage
+const saveCanvas = () => {
+  const stage = stageRef.current.toDataURL(); // Get the canvas as a data URL
+  setRecentlySaved((prev) => {
+    const updatedList = [...prev, stage];
+    localStorage.setItem("recentlySavedCanvases", JSON.stringify(updatedList)); // Save to local storage
+    return updatedList;
+  });
+};
 
-  // Function to delete a saved canvas
-  const deleteSavedCanvas = (index) => {
-    setRecentlySaved((prev) => prev.filter((_, i) => i !== index));
-  };
+// Function to delete a saved canvas from recently saved and local storage
+const deleteSavedCanvas = (index) => {
+  setRecentlySaved((prev) => {
+    const updatedList = prev.filter((_, i) => i !== index);
+    localStorage.setItem("recentlySavedCanvases", JSON.stringify(updatedList)); // Update local storage
+    return updatedList;
+  });
+};
+
+// Retrieve saved canvases from local storage when the component mounts
+useEffect(() => {
+  const savedCanvases = JSON.parse(localStorage.getItem("recentlySavedCanvases")) || [];
+  setRecentlySaved(savedCanvases); // Load saved canvases into state
+}, []);
 
   // Function to preview a saved canvas
   const previewSavedCanvas = (image) => {

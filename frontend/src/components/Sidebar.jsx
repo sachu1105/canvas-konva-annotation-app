@@ -131,6 +131,8 @@ const ImageEditorSidebar = ({
     };
   }, []);
 
+  
+
   return (
     <aside
       className={`relative h-screen bg-white transition-all duration-200 shadow-xl ${
@@ -230,8 +232,11 @@ const ImageEditorSidebar = ({
                 {/* Dropdown for Placeholders */}
                 <select
                   value={selectedPlaceholder}
-                  onChange={(e) => setSelectedPlaceholder(e.target.value)}
-                  onClick={() => addPlaceholderToCanvas(selectedPlaceholder)}
+                  onChange={(e) => {
+                    setSelectedPlaceholder(e.target.value);
+                    addPlaceholderToCanvas(e.target.value);
+                    setSelectedPlaceholder(""); // Reset to default option
+                  }}
                   className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500 shadow-sm"
                 >
                   <option value="">Add Placeholder to Canvas</option>
@@ -242,13 +247,7 @@ const ImageEditorSidebar = ({
                   ))}
                 </select>
 
-                {/* Add to Canvas Button */}
-                {/* <button
-                  className="flex items-center justify-center gap-2 w-full py-2 px-4 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-transform transform hover:scale-105"
-                  aria-label="Add placeholder to canvas"
-                >
-                  <Layout size={20} /> Add to Canvas
-                </button> */}
+                
               </div>
             )}
             {/* Canvas Section */}

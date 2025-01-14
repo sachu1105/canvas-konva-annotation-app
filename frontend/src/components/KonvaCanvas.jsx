@@ -303,6 +303,7 @@ const KonvaCanvas = ({
     } else if (selectedShape === "arrow") {
       addArrow();
     }
+    setSelectedShape(""); // Reset to default option
   };
 
   // Function to delete the selected object
@@ -664,26 +665,22 @@ useEffect(() => {
 
   const handleZoom = (newZoom) => {
     const stage = stageRef.current;
-
+  
     // Get current pointer position relative to the stage
     const mousePointTo = {
-      x: (stage.getPointerPosition()?.x ?? 0) / zoom - stage.x() / zoom,
-      y: (stage.getPointerPosition()?.y ?? 0) / zoom - stage.y() / zoom,
+      x: (stage.getPointerPosition()?.x ?? 0) / stage.scaleX() - stage.x() / stage.scaleX(),
+      y: (stage.getPointerPosition()?.y ?? 0) / stage.scaleY() - stage.y() / stage.scaleY(),
     };
-
+  
     // Set the new zoom value
     setZoom(newZoom);
-
+  
     // Adjust the stage's position to simulate zooming into the pointer
     const newPos = {
-      x:
-        -(mousePointTo.x - (stage.getPointerPosition()?.x ?? 0) / newZoom) *
-        newZoom,
-      y:
-        -(mousePointTo.y - (stage.getPointerPosition()?.y ?? 0) / newZoom) *
-        newZoom,
+      x: -(mousePointTo.x - (stage.getPointerPosition()?.x ?? 0) / newZoom) * newZoom,
+      y: -(mousePointTo.y - (stage.getPointerPosition()?.y ?? 0) / newZoom) * newZoom,
     };
-
+  
     stage.scale({ x: newZoom, y: newZoom });
     stage.position(newPos);
     stage.batchDraw();

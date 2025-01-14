@@ -323,35 +323,234 @@ const KonvaCanvas = ({
     }
   };
 
+  // Add this function to serialize canvas data
+  const serializeCanvasData = () => {
+    const stage = stageRef.current;
+    
+    // Helper function to clean object attributes
+    const cleanAttrs = (attrs) => {
+      const cleanedAttrs = {};
+      // Only copy serializable properties
+      const serializableProps = [
+        'x', 'y', 'width', 'height', 'radius', 
+        'scaleX', 'scaleY', 'rotation', 'text',
+        'fontSize', 'fontFamily', 'fill', 'stroke',
+        'strokeWidth', 'align', 'verticalAlign',
+        'points', 'pointerLength', 'pointerWidth',
+        'numPoints', 'innerRadius', 'outerRadius',
+        'textDecoration', 'fontStyle'
+      ];
+  
+      serializableProps.forEach(prop => {
+        if (attrs[prop] !== undefined) {
+          cleanedAttrs[prop] = attrs[prop];
+        }
+      });
+      return cleanedAttrs;
+    };
+  
+    const canvasData = {
+      version: "1.0",
+      timestamp: new Date().toISOString(),
+      canvasSize: {
+        width: canvasSize.width,
+        height: canvasSize.height,
+      },
+      backgroundImage: imageUrl,
+      zoom: zoom,
+      objects: objects.map(obj => {
+        // Get the actual node
+        const node = obj.ref.current;
+        let attrs = {};
+  
+        if (node) {
+          // Get current transformation values using Konva methods
+          attrs = {
+            ...cleanAttrs(node.attrs),
+            x: node.x(),
+            y: node.y(),
+            scaleX: node.scaleX(),
+            scaleY: node.scaleY(),
+            rotation: node.rotation(),
+            // For text specific properties
+            ...(obj.type === 'text' && {
+              text: node.text(),
+              fontSize: node.fontSize(),
+              fontFamily: node.fontFamily(),
+              align: node.align(),
+              fontStyle: node.fontStyle(),
+              textDecoration: node.textDecoration()
+            }),
+            // For shapes specific properties
+            ...(obj.type === 'rect' && {
+              width: node.width(),
+              height: node.height()
+            }),
+            ...(obj.type === 'circle' && {
+              radius: node.radius()
+            }),
+            // For line and arrow
+            ...((['line', 'arrow'].includes(obj.type)) && {
+              points: node.points()
+            }),
+            // For star
+            ...(obj.type === 'star' && {
+              innerRadius: node.innerRadius(),
+              outerRadius: node.outerRadius(),
+              numPoints: node.numPoints()
+            }),
+            // For images, store the data URL
+            ...(obj.type === 'image' && {
+              imageData: node.image().src // Store the image source
+            })
+          };
+        } else {
+          attrs = cleanAttrs(obj.attrs);
+        }
+  
+        return {
+          id: obj.id,
+          type: obj.type,
+          attrs: attrs
+        };
+      })
+    };
+  
+    return canvasData;
+  };
+  
+  const saveCanvas = () => {
+    try {
+      const canvasData = serializeCanvasData();
+      const stage = stageRef.current;
+      
+      // Create preview image
+      const dataUrl = stage.toDataURL();
+      
+      // Create the save object with timestamp and name
+      const saveObject = {
+        id: Date.now(),
+        name: `Canvas ${new Date().toLocaleString()}`,
+        preview: dataUrl,
+        data: canvasData,
+      };
+  
+      // Update recently saved list
+      setRecentlySaved(prev => {
+        const updatedList = [...prev, saveObject];
+        // Save to localStorage
+        try {
+          localStorage.setItem("recentlySavedCanvases", JSON.stringify(updatedList));
+        } catch (e) {
+          console.error("Error saving to localStorage:", e);
+          alert("Error saving to localStorage. Make sure you have enough storage space.");
+        }
+        return updatedList;
+      });
+  
+      // Show success message
+      alert("Canvas saved successfully!");
+      
+    } catch (error) {
+      console.error("Error saving canvas:", error);
+      alert("There was an error saving the canvas. Please try again.");
+    }
+  };
+  
+  // Add a function to load saved canvas data
+  const loadCanvasData = (savedData) => {
+    if (!savedData || !savedData.data) return;
+    
+    const data = savedData.data;
+    
+    try {
+      // Set canvas size
+      setCanvasSize(data.canvasSize);
+      
+      // Set background image if exists
+      if (data.backgroundImage) {
+        setImageUrl(data.backgroundImage);
+      }
+      
+      // Set zoom level
+      setZoom(data.zoom || 1);
+      
+      // Create new objects with refs and restore all properties
+      const newObjects = data.objects.map(obj => {
+        const ref = React.createRef();
+        
+        // Handle image objects specially
+        if (obj.type === 'image' && obj.attrs.imageData) {
+          const img = new window.Image();
+          img.src = obj.attrs.imageData;
+          
+          return {
+            ...obj,
+            ref,
+            attrs: {
+              ...obj.attrs,
+              image: img,
+              draggable: true,
+            }
+          };
+        }
+        
+        return {
+          ...obj,
+          ref,
+          attrs: {
+            ...obj.attrs,
+            draggable: true,
+          }
+        };
+      });
+      
+      // Wait for all images to load before setting objects
+      const imagePromises = newObjects
+        .filter(obj => obj.type === 'image')
+        .map(obj => {
+          return new Promise((resolve) => {
+            obj.attrs.image.onload = () => resolve();
+          });
+        });
+  
+      Promise.all(imagePromises).then(() => {
+        setObjects(newObjects);
+        addToHistory(newObjects);
+      });
+      
+      setSelectedObjectId(null);
+      
+    } catch (error) {
+      console.error("Error loading canvas:", error);
+      alert("There was an error loading the canvas.");
+    }
+  };
+  
 
-// Function to save edited canvas to the recently saved and local storage
-const saveCanvas = () => {
-  const stage = stageRef.current.toDataURL(); // Get the canvas as a data URL
-  setRecentlySaved((prev) => {
-    const updatedList = [...prev, stage];
-    localStorage.setItem("recentlySavedCanvases", JSON.stringify(updatedList)); // Save to local storage
-    return updatedList;
-  });
-};
+  // Function to delete a saved canvas from recently saved and local storage
+  const deleteSavedCanvas = (index) => {
+    setRecentlySaved((prev) => {
+      const updatedList = prev.filter((_, i) => i !== index);
+      localStorage.setItem("recentlySavedCanvases", JSON.stringify(updatedList)); // Update local storage
+      return updatedList;
+    });
+  };
 
-// Function to delete a saved canvas from recently saved and local storage
-const deleteSavedCanvas = (index) => {
-  setRecentlySaved((prev) => {
-    const updatedList = prev.filter((_, i) => i !== index);
-    localStorage.setItem("recentlySavedCanvases", JSON.stringify(updatedList)); // Update local storage
-    return updatedList;
-  });
-};
+  // Retrieve saved canvases from local storage when the component mounts
+  useEffect(() => {
+    const savedCanvases = JSON.parse(localStorage.getItem("recentlySavedCanvases")) || [];
+    setRecentlySaved(savedCanvases); // Load saved canvases into state
+  }, []);
 
-// Retrieve saved canvases from local storage when the component mounts
-useEffect(() => {
-  const savedCanvases = JSON.parse(localStorage.getItem("recentlySavedCanvases")) || [];
-  setRecentlySaved(savedCanvases); // Load saved canvases into state
-}, []);
-
-  // Function to preview a saved canvas
-  const previewSavedCanvas = (image) => {
-    setPreviewImage(image);
+  // Modify the previewSavedCanvas function to handle loading
+  const previewSavedCanvas = (savedCanvas) => {
+    setPreviewImage(savedCanvas.preview);
+    // Add button or functionality to load this canvas
+    if (window.confirm('Would you like to load this canvas?')) {
+      loadCanvasData(savedCanvas);
+      setPreviewImage(null);
+    }
   };
 
   // Handle object selection

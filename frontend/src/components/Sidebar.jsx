@@ -317,10 +317,10 @@ const ImageEditorSidebar = ({
                     recentlySaved.map((save, index) => (
                       <div key={index} className="relative">
                         <img
-                          src={save}
+                          src={save.preview} // Now using the preview from save object
                           alt={`Save ${index}`}
                           className="w-full h-24 object-cover rounded-lg border border-amber-200 cursor-pointer"
-                          onClick={() => previewSavedCanvas(save)}
+                          onClick={() => previewSavedCanvas(save)} // Pass the entire save object
                         />
                         <button
                           onClick={() => deleteSavedCanvas(index)}

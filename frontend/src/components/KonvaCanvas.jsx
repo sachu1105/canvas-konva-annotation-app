@@ -663,43 +663,61 @@ useEffect(() => {
     }
   }, [selectedTemplate]);
 
+
   const handleZoom = (newZoom) => {
     const stage = stageRef.current;
   
-    // Get current pointer position relative to the stage
-    const mousePointTo = {
-      x: (stage.getPointerPosition()?.x ?? 0) / stage.scaleX() - stage.x() / stage.scaleX(),
-      y: (stage.getPointerPosition()?.y ?? 0) / stage.scaleY() - stage.y() / stage.scaleY(),
+    if (!stage) return;
+  
+    // Get the current pointer position on the stage
+    const pointerPosition = stage.getPointerPosition();
+    if (!pointerPosition) return;
+  
+    // Calculate the pointer position relative to the stage
+    const pointerToStage = {
+      x: (pointerPosition.x - stage.x()) / stage.scaleX(),
+      y: (pointerPosition.y - stage.y()) / stage.scaleY(),
     };
   
-    // Set the new zoom value
-    setZoom(newZoom);
-  
-    // Adjust the stage's position to simulate zooming into the pointer
-    const newPos = {
-      x: -(mousePointTo.x - (stage.getPointerPosition()?.x ?? 0) / newZoom) * newZoom,
-      y: -(mousePointTo.y - (stage.getPointerPosition()?.y ?? 0) / newZoom) * newZoom,
-    };
-  
+    // Update the stage scale
     stage.scale({ x: newZoom, y: newZoom });
+  
+    // Calculate new position so the zoom stays centered on the pointer
+    const newPos = {
+      x: pointerPosition.x - pointerToStage.x * newZoom,
+      y: pointerPosition.y - pointerToStage.y * newZoom,
+    };
+  
     stage.position(newPos);
-    stage.batchDraw();
+    stage.batchDraw(); // Redraw the stage for updated changes
+  
+    // Update the state for tracking zoom level
+    setZoom(newZoom);
   };
-
+  
   // Function to handle zoom in
   const handleZoomIn = () => {
     handleZoom(Math.min(zoom + 0.1, 3)); // Limit max zoom level to 3
   };
-
+  
   // Function to handle zoom out
   const handleZoomOut = () => {
     handleZoom(Math.max(zoom - 0.1, 0.5)); // Limit min zoom level to 0.5
   };
-
+  
   // Function to reset zoom
   const handleZoomReset = () => {
-    handleZoom(1);
+    const stage = stageRef.current;
+  
+    if (!stage) return;
+  
+    stage.scale({ x: 1, y: 1 });
+    stage.position({ x: 0, y: 0 });
+    stage.batchDraw();
+  
+    setZoom(1);
   };
+  
 
   // Adjust canvas size and position to stay centered
   const getCanvasStyle = () => {
@@ -794,9 +812,6 @@ useEffect(() => {
         handleTemplateClick={handleTemplateClick}
         templates={templates} // Pass templates as a prop
         handleTemplateLoad={loadTemplate} // Pass loadTemplate as a prop
-        handleZoomIn={handleZoomIn} // Pass handleZoomIn as a prop
-        handleZoomOut={handleZoomOut} // Pass handleZoomOut as a prop
-        handleZoomReset={handleZoomReset} // Pass handleZoomReset as a prop
         deleteSavedCanvas={deleteSavedCanvas} // Pass deleteSavedCanvas as a prop
         previewSavedCanvas={previewSavedCanvas} // Pass previewSavedCanvas as a prop
       />
@@ -918,9 +933,7 @@ useEffect(() => {
 
           {/* Move undo, redo, and delete buttons to the top right corner */}
           <div className="flex gap-2 ml-auto">
-
            
-
             <ToolbarButton 
             onClick={saveCanvas} 
             icon={Save} 
@@ -1093,25 +1106,30 @@ useEffect(() => {
 
                 {/* Transformer */}
                 {selectedObjectId !== null && (
-                  <Transformer
-                    ref={transformerRef}
-                    node={
-                      objects.find((obj) => obj.id === selectedObjectId)?.ref
-                        .current
-                    }
-                    enabledAnchors={[
-                      "top-left",
-                      "top-right",
-                      "bottom-left",
-                      "bottom-right",
-                      "middle-left",
-                      "middle-right",
-                    ]}
-                    boundBoxFunc={(oldBox, newBox) => {
-                      newBox.width = Math.max(30, newBox.width);
-                      return newBox;
-                    }}
-                  />
+                 <Transformer
+                 ref={transformerRef}
+                 node={objects.find((obj) => obj.id === selectedObjectId)?.ref.current}
+                 enabledAnchors={[
+                   "top-left",
+                   "top-right",
+                   "bottom-left",
+                   "bottom-right",
+                   "middle-left",
+                   "middle-right",
+                 ]}
+                 anchorSize={8} // Make anchors larger or smaller
+                 anchorStroke="black" // Change anchor border color
+                 anchorCornerRadius={5} // Makes anchors rounded
+                 anchorStrokeWidth={1} // Adjust border thickness
+                 anchorFill="white" // Set anchor fill color
+                 borderStroke="yellow" // Change border color
+                 borderStrokeWidth={1} // Adjust border thickness
+                 boundBoxFunc={(oldBox, newBox) => {
+                   newBox.width = Math.max(30, newBox.width);
+                   return newBox;
+                 }}
+               />
+               
                 )}
               </Layer>
             </Stage>

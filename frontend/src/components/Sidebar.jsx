@@ -9,6 +9,9 @@ import {
   Plus,
   FileText as Template,
   Trash2, // Add Trash2 icon for delete functionality
+  Layers, // Add Layers icon for layers functionality
+  ArrowDown as MoveDown,  // Changed to use ArrowDown instead of MoveDown
+  ArrowUp as MoveUp,     // Changed to use ArrowUp instead of MoveUp
 } from "lucide-react";
 
 const ImageEditorSidebar = ({
@@ -30,6 +33,11 @@ const ImageEditorSidebar = ({
   handleZoomReset,
   deleteSavedCanvas, // Add deleteSavedCanvas prop
   previewSavedCanvas, // Add previewSavedCanvas prop
+  objects = [], // Add default empty array
+  selectedObjectId, // Add selectedObjectId prop
+  setSelectedObjectId, // Add setSelectedObjectId prop
+  moveObjectUp, // Add moveObjectUp prop
+  moveObjectDown, // Add moveObjectDown prop
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState("upload");
@@ -120,6 +128,9 @@ const ImageEditorSidebar = ({
         case "5":
           handleSectionChange("history");
           break;
+        case "6":
+          handleSectionChange("layers");
+          break;
         default:
           break;
       }
@@ -148,6 +159,7 @@ const ImageEditorSidebar = ({
             <SectionButton id="canvas" icon={Ruler} label="Canvas" />
             <SectionButton id="template" icon={Template} label="Template" />
             <SectionButton id="upload" icon={Image} label="Images" />
+            <SectionButton id="layers" icon={Layers} label="Layers" /> {/* Add Layers button */}
             <SectionButton id="placeholders" icon={Tag} label="Placeholders" />
             <SectionButton id="history" icon={History} label="History" />
           </div>
@@ -370,6 +382,50 @@ const ImageEditorSidebar = ({
                       No templates available
                     </p>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Layers Section */}
+            {activeSection === "layers" && (
+              <div className="space-y-4">
+                <h3 className="font-medium text-gray-700">Layers</h3>
+                <div className="space-y-2">
+                  {objects.slice().reverse().map((obj, index) => (
+                    <div
+                      key={obj.id}
+                      className={`flex items-center justify-between p-2 rounded-lg ${
+                        obj.id === selectedObjectId ? 'bg-amber-100' : 'bg-gray-50'
+                      } hover:bg-amber-50 cursor-pointer`}
+                      onClick={() => setSelectedObjectId(obj.id)}
+                    >
+                      <span className="text-sm">
+                        {obj.type.charAt(0).toUpperCase() + obj.type.slice(1)} {objects.length - index}
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            moveObjectUp(obj.id);
+                          }}
+                          className="p-1 hover:bg-amber-200 rounded"
+                          disabled={index === 0}
+                        >
+                          <MoveUp size={16} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            moveObjectDown(obj.id);
+                          }}
+                          className="p-1 hover:bg-amber-200 rounded"
+                          disabled={index === objects.length - 1}
+                        >
+                          <MoveDown size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

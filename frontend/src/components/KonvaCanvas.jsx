@@ -28,6 +28,8 @@ import {
   ZoomOut,
   RefreshCw,
   X,
+  MoveUp,
+  MoveDown,
 } from "lucide-react"; // Add text formatting icons
 import Select from "react-select"; // Add react-select for font family dropdown
 
@@ -933,6 +935,35 @@ const KonvaCanvas = ({
     };
   };
 
+  // Add these layer management functions
+  const moveObjectUp = () => {
+    if (selectedObjectId) {
+      const currentIndex = objects.findIndex(obj => obj.id === selectedObjectId);
+      if (currentIndex < objects.length - 1) {
+        const newObjects = [...objects];
+        const temp = newObjects[currentIndex];
+        newObjects[currentIndex] = newObjects[currentIndex + 1];
+        newObjects[currentIndex + 1] = temp;
+        setObjects(newObjects);
+        addToHistory(newObjects);
+      }
+    }
+  };
+
+  const moveObjectDown = () => {
+    if (selectedObjectId) {
+      const currentIndex = objects.findIndex(obj => obj.id === selectedObjectId);
+      if (currentIndex > 0) {
+        const newObjects = [...objects];
+        const temp = newObjects[currentIndex];
+        newObjects[currentIndex] = newObjects[currentIndex - 1];
+        newObjects[currentIndex - 1] = temp;
+        setObjects(newObjects);
+        addToHistory(newObjects);
+      }
+    }
+  };
+
   //global toolbar for buttons
   const ToolbarButton = ({ onClick, active, disabled, icon: Icon, label }) => (
     <button
@@ -1020,6 +1051,11 @@ const KonvaCanvas = ({
         handleTemplateLoad={loadTemplate} // Pass loadTemplate as a prop
         deleteSavedCanvas={deleteSavedCanvas} // Pass deleteSavedCanvas as a prop
         previewSavedCanvas={previewSavedCanvas} // Pass previewSavedCanvas as a prop
+        objects={objects}  // Add this prop
+        selectedObjectId={selectedObjectId}  // Add this prop
+        setSelectedObjectId={setSelectedObjectId}  // Add this prop
+        moveObjectUp={moveObjectUp}  // Add this prop
+        moveObjectDown={moveObjectDown}  // Add this prop
       />
 
       {/* Main Content */}
@@ -1164,6 +1200,22 @@ const KonvaCanvas = ({
               icon={Trash2}
               label="Delete"
             />
+            {selectedObjectId && (
+              <>
+                <ToolbarButton
+                  onClick={moveObjectUp}
+                  icon={MoveUp}
+                  label="Move Forward"
+                  disabled={!selectedObjectId}
+                />
+                <ToolbarButton
+                  onClick={moveObjectDown}
+                  icon={MoveDown}
+                  label="Move Backward"
+                  disabled={!selectedObjectId}
+                />
+              </>
+            )}
           </div>
         </div>
 

@@ -988,8 +988,9 @@ useEffect(() => {
                     y={0}
                     width={canvasSize.width}
                     height={canvasSize.height}
-                    scaleX={zoom}
-                    scaleY={zoom}
+                    // Ensure the image scales with the canvas
+                    scaleX={1}
+                    scaleY={1}
                     onClick={handleStageClick} // Ensure background image click clears transformer
                   />
                 )}
@@ -1106,30 +1107,26 @@ useEffect(() => {
 
                 {/* Transformer */}
                 {selectedObjectId !== null && (
-                 <Transformer
-                 ref={transformerRef}
-                 node={objects.find((obj) => obj.id === selectedObjectId)?.ref.current}
-                 enabledAnchors={[
-                   "top-left",
-                   "top-right",
-                   "bottom-left",
-                   "bottom-right",
-                   "middle-left",
-                   "middle-right",
-                 ]}
-                 anchorSize={8} // Make anchors larger or smaller
-                 anchorStroke="black" // Change anchor border color
-                 anchorCornerRadius={5} // Makes anchors rounded
-                 anchorStrokeWidth={1} // Adjust border thickness
-                 anchorFill="white" // Set anchor fill color
-                 borderStroke="yellow" // Change border color
-                 borderStrokeWidth={1} // Adjust border thickness
-                 boundBoxFunc={(oldBox, newBox) => {
-                   newBox.width = Math.max(30, newBox.width);
-                   return newBox;
-                 }}
-               />
-               
+                  <Transformer
+                    ref={transformerRef}
+                    node={objects.find((obj) => obj.id === selectedObjectId)?.ref.current}
+                    enabledAnchors={
+                      objects.find((obj) => obj.id === selectedObjectId)?.type === 'text'
+                        ? ["middle-left", "middle-right"] // Only middle anchors for text
+                        : ["top-left", "top-right", "bottom-left", "bottom-right", "middle-left", "middle-right"] // All anchors for other objects
+                    }
+                    anchorSize={8}
+                    anchorStroke="black"
+                    anchorCornerRadius={5}
+                    anchorStrokeWidth={1}
+                    anchorFill="white"
+                    borderStroke="yellow"
+                    borderStrokeWidth={1}
+                    boundBoxFunc={(oldBox, newBox) => {
+                      newBox.width = Math.max(30, newBox.width);
+                      return newBox;
+                    }}
+                  />
                 )}
               </Layer>
             </Stage>

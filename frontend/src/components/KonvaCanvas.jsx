@@ -721,6 +721,7 @@ const KonvaCanvas = ({
           id,
           type: "text",
           ref: textRef,
+          isPlaceholder: true, // Add this flag
           attrs: {
             x: 100,
             y: 100,
@@ -728,7 +729,13 @@ const KonvaCanvas = ({
             fontSize: 20, // Default font size
             fontFamily: "Arial", // Optional: Set font family
             draggable: true,
-            fill: "#000000", // Default color
+            fill: "#FF5722", // Different color for placeholders
+            padding: 5,
+            background: "#FBE9E7", // Light background for placeholders
+            stroke: "#FF5722", // Border color
+            strokeWidth: 1,
+            cornerRadius: 5, // Rounded corners
+            width: placeholder.length * 12, // Dynamic width based on text length
           },
         },
       ];
@@ -1296,6 +1303,13 @@ const KonvaCanvas = ({
                           onDragMove={(e) => handleDragMove(obj.id, e)}
                           onDragEnd={(e) => handleDragEnd(obj.id, e)}
                           onTransformEnd={(e) => handleTransformEnd(obj.id, e)}
+                          // Add special styling for placeholders
+                          fill={obj.isPlaceholder ? "#FF5722" : obj.attrs.fill}
+                          padding={obj.isPlaceholder ? 5 : 0}
+                          background={obj.isPlaceholder ? "#FBE9E7" : "transparent"}
+                          stroke={obj.isPlaceholder ? "#FF5722" : "transparent"}
+                          strokeWidth={obj.isPlaceholder ? 1 : 0}
+                          cornerRadius={obj.isPlaceholder ? 5 : 0}
                         />
                       );
 

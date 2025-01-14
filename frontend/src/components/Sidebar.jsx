@@ -229,25 +229,26 @@ const ImageEditorSidebar = ({
                   <Plus size={20} /> Add Custom Placeholder
                 </button>
 
-                {/* Dropdown for Placeholders */}
-                <select
-                  value={selectedPlaceholder}
-                  onChange={(e) => {
-                    setSelectedPlaceholder(e.target.value);
-                    addPlaceholderToCanvas(e.target.value);
-                    setSelectedPlaceholder(""); // Reset to default option
-                  }}
-                  className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500 shadow-sm"
-                >
-                  <option value="">Add Placeholder to Canvas</option>
-                  {allPlaceholders.map((placeholder, index) => (
-                    <option key={index} value={placeholder}>
-                      {placeholder}
-                    </option>
-                  ))}
-                </select>
-
-                
+                {/* Placeholders List */}
+                <div className="space-y-2">
+                  <h3 className="font-medium text-gray-700">Available Placeholders</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {allPlaceholders.map((placeholder, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          addPlaceholderToCanvas(placeholder);
+                          setSelectedPlaceholder("");
+                        }}
+                        className="p-2 text-sm bg-orange-50 border border-orange-200 text-orange-700 rounded-lg 
+                                 hover:bg-orange-100 transition-colors flex items-center justify-center gap-1"
+                      >
+                        <Tag size={14} />
+                        {placeholder}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
             {/* Canvas Section */}

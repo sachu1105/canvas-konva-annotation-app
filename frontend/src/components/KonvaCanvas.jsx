@@ -1,43 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import ImageEditorSidebar from "./Sidebar";
-import {
-  Stage,
-  Layer,
-  Image,
-  Rect,
-  Circle,
-  Text,
-  Transformer,
-  Arrow,
-  Star,
-  Line,
-} from "react-konva";
-import {
-  Bold,
-  Italic,
-  Underline,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Undo,
-  Redo,
-  Trash2,
-  Save,
-  Palette,
-  ZoomIn,
-  ZoomOut,
-  RefreshCw,
-  X,
-  MoveUp,
-  MoveDown,
-} from "lucide-react"; // Add text formatting icons
-import Select from "react-select"; // Add react-select for font family dropdown
+import Navbar from "./Navbar"; // Import the Navbar component
+import {Stage,Layer,Image,Rect,Circle,Text,Transformer,Arrow,Star,Line,} from "react-konva";
+import {X} from "lucide-react"; // Add text formatting icons
+import Toolbar from "./Toolbar"; // Import the Toolbar component
 
 const KonvaCanvas = ({
   addCustomPlaceholder,
   customPlaceholders,
   templates,
-  handleTemplateLoad,
   selectedTemplate,
 }) => {
   const [imageUrl, setImageUrl] = useState(null); // Stores the uploaded image URL
@@ -69,8 +40,8 @@ const KonvaCanvas = ({
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderline, setIsUnderline] = useState(false);
   const [textAlign, setTextAlign] = useState("left");
-  const [zoom, setZoom] = useState(1); // Add zoom state
   const [previewImage, setPreviewImage] = useState(null); // State to store the preview image
+  const [scale, setScale] = useState(1); // Add state for scale
   // Refs for stage (canvas container) and transformer
   const stageRef = useRef(null);
   const transformerRef = useRef(null);
@@ -359,7 +330,6 @@ const KonvaCanvas = ({
         height: canvasSize.height,
       },
       backgroundImage: imageUrl,
-      zoom: zoom,
       objects: objects.map(obj => {
         // Get the actual node
         const node = obj.ref.current;
@@ -473,9 +443,6 @@ const KonvaCanvas = ({
       if (data.backgroundImage) {
         setImageUrl(data.backgroundImage);
       }
-      
-      // Set zoom level
-      setZoom(data.zoom || 1);
       
       // Create new objects with refs and restore all properties
       const newObjects = data.objects.map(obj => {
@@ -871,66 +838,25 @@ const KonvaCanvas = ({
     }
   }, [selectedTemplate]);
 
-
-  const handleZoom = (newZoom) => {
-    const stage = stageRef.current;
-  
-    if (!stage) return;
-  
-    // Get the current pointer position on the stage
-    const pointerPosition = stage.getPointerPosition();
-    if (!pointerPosition) return;
-  
-    // Calculate the pointer position relative to the stage
-    const pointerToStage = {
-      x: (pointerPosition.x - stage.x()) / stage.scaleX(),
-      y: (pointerPosition.y - stage.y()) / stage.scaleY(),
-    };
-  
-    // Update the stage scale
-    stage.scale({ x: newZoom, y: newZoom });
-  
-    // Calculate new position so the zoom stays centered on the pointer
-    const newPos = {
-      x: pointerPosition.x - pointerToStage.x * newZoom,
-      y: pointerPosition.y - pointerToStage.y * newZoom,
-    };
-  
-    stage.position(newPos);
-    stage.batchDraw(); // Redraw the stage for updated changes
-  
-    // Update the state for tracking zoom level
-    setZoom(newZoom);
-  };
-  
   // Function to handle zoom in
   const handleZoomIn = () => {
-    handleZoom(Math.min(zoom + 0.1, 3)); // Limit max zoom level to 3
+    setScale((prevScale) => Math.min(prevScale + 0.1, 3)); // Limit max zoom level
   };
-  
+
   // Function to handle zoom out
   const handleZoomOut = () => {
-    handleZoom(Math.max(zoom - 0.1, 0.5)); // Limit min zoom level to 0.5
+    setScale((prevScale) => Math.max(prevScale - 0.1, 0.5)); // Limit min zoom level
   };
-  
-  // Function to reset zoom
-  const handleZoomReset = () => {
-    const stage = stageRef.current;
-  
-    if (!stage) return;
-  
-    stage.scale({ x: 1, y: 1 });
-    stage.position({ x: 0, y: 0 });
-    stage.batchDraw();
-  
-    setZoom(1);
+
+  // Function to handle reset zoom
+  const handleResetZoom = () => {
+    setScale(1); // Reset zoom level to default
   };
-  
 
   // Adjust canvas size and position to stay centered
   const getCanvasStyle = () => {
     return {
-      transform: `scale(${zoom})`,
+      transform: `scale(${scale})`,
       transformOrigin: "center center",
     };
   };
@@ -1060,164 +986,32 @@ const KonvaCanvas = ({
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col bg-[#f7f7f7] overflow-hidden">
-        <div className="flex justify-between items-center w-full p-4 bg-white shadow-lg z-10">
-          {/* Add Text and Shape dropdowns to the top navbar */}
-          <div className="flex gap-2 ml-4">
-            <button
-              onClick={addText}
-              className="py-2 px-4 border text-sm border-gray-500 text-grey-800 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              Add Text
-            </button>
-            <select
-              onChange={handleShapeChange}
-              onClick={handleShapeAdd}
-              className="py-2 px-2 text-sm  border  border-gray-500 text-grey-600 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <option value="">Select Shape</option>
-              <option value="rectangle">Rectangle</option>
-              <option value="circle">Circle</option>
-              <option value="star">Star</option>
-              <option value="line">Line</option>
-              <option value="arrow">Arrow</option>
-            </select>
-
-            <div className="flex items-center gap-2">
-              <Palette className="w-5 h-5 text-gray-500" />
-              <input
-                type="color"
-                value={selectedColor}
-                onChange={(e) => handleColorChange?.({ hex: e.target.value })}
-                className="w-8 h-8 rounded cursor-pointer border border-gray-200"
-                title="Choose Color"
-              />
-            </div>
-          </div>
-
-          {/* Text formatting options */}
-          {selectedObjectId !== null &&
-            objects.find((obj) => obj.id === selectedObjectId)?.type ===
-              "text" && (
-              <div className="flex gap-2 mr-8 ml-4">
-                <button
-                  onClick={() => handleTextFormatting("bold")}
-                  className={`py-2 px-4 border ${
-                    isBold ? "bg-gray-300" : "bg-gray-100"
-                  } text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
-                >
-                  <Bold className="inline" />
-                </button>
-                <button
-                  onClick={() => handleTextFormatting("italic")}
-                  className={`py-2 px-4 border ${
-                    isItalic ? "bg-gray-300" : "bg-gray-100"
-                  } text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
-                >
-                  <Italic className="inline" />
-                </button>
-                <button
-                  onClick={() => handleTextFormatting("underline")}
-                  className={`py-2 px-4 border ${
-                    isUnderline ? "bg-gray-300" : "bg-gray-100"
-                  } text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
-                >
-                  <Underline className="inline" />
-                </button>
-                <button
-                  onClick={() => handleTextFormatting("align-left")}
-                  className={`py-2 px-4 border ${
-                    textAlign === "left" ? "bg-gray-300" : "bg-gray-100"
-                  } text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
-                >
-                  <AlignLeft className="inline" />
-                </button>
-                <button
-                  onClick={() => handleTextFormatting("align-center")}
-                  className={`py-2 px-4 border ${
-                    textAlign === "center" ? "bg-gray-300" : "bg-gray-100"
-                  } text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
-                >
-                  <AlignCenter className="inline" />
-                </button>
-                <button
-                  onClick={() => handleTextFormatting("align-right")}
-                  className={`py-2 px-4 border ${
-                    textAlign === "right" ? "bg-gray-300" : "bg-gray-100"
-                  } text-gray-800 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer`}
-                >
-                  <AlignRight className="inline" />
-                </button>
-                <Select
-                  value={{
-                    value: selectedFontFamily,
-                    label: selectedFontFamily,
-                  }}
-                  onChange={handleFontFamilyChange}
-                  options={[
-                    { value: "Arial", label: "Arial" },
-                    { value: "Courier New", label: "Courier New" },
-                    { value: "Georgia", label: "Georgia" },
-                    { value: "Times New Roman", label: "Times New Roman" },
-                    { value: "Verdana", label: "Verdana" },
-                  ]}
-                  className="w-40"
-                />
-                <input
-                  type="number"
-                  value={selectedFontSize}
-                  onChange={handleFontSizeChange}
-                  className="w-20 p-2 border border-gray-300 rounded-lg"
-                  min="8"
-                  max="100"
-                />
-              </div>
-            )}
-
-          {/* Move undo, redo, and delete buttons to the top right corner */}
-          <div className="flex gap-2 ml-auto">
-           
-            <ToolbarButton 
-            onClick={saveCanvas} 
-            icon={Save} 
-            label="Save" 
-            />
-
-            <ToolbarButton
-              onClick={undo}
-              disabled={!undo || historyIndex <= 0}
-              icon={Undo}
-              label="Undo"
-            />
-            <ToolbarButton
-              onClick={redo}
-              disabled={!redo || historyIndex >= history.length - 1}
-              icon={Redo}
-              label="Redo"
-            />
-            <ToolbarButton
-              onClick={deleteAnnotation}
-              disabled={!deleteAnnotation}
-              icon={Trash2}
-              label="Delete"
-            />
-            {selectedObjectId && (
-              <>
-                <ToolbarButton
-                  onClick={moveObjectUp}
-                  icon={MoveUp}
-                  label="Move Forward"
-                  disabled={!selectedObjectId}
-                />
-                <ToolbarButton
-                  onClick={moveObjectDown}
-                  icon={MoveDown}
-                  label="Move Backward"
-                  disabled={!selectedObjectId}
-                />
-              </>
-            )}
-          </div>
-        </div>
+        <Navbar
+          addText={addText}
+          handleShapeChange={handleShapeChange}
+          handleShapeAdd={handleShapeAdd}
+          selectedColor={selectedColor}
+          handleColorChange={handleColorChange}
+          selectedObjectId={selectedObjectId}
+          objects={objects}
+          handleTextFormatting={handleTextFormatting}
+          isBold={isBold}
+          isItalic={isItalic}
+          isUnderline={isUnderline}
+          textAlign={textAlign}
+          selectedFontFamily={selectedFontFamily}
+          handleFontFamilyChange={handleFontFamilyChange}
+          selectedFontSize={selectedFontSize}
+          handleFontSizeChange={handleFontSizeChange}
+          saveCanvas={saveCanvas}
+          undo={undo}
+          redo={redo}
+          deleteAnnotation={deleteAnnotation}
+          historyIndex={historyIndex}
+          history={history}
+          moveObjectUp={moveObjectUp}
+          moveObjectDown={moveObjectDown}
+        />
 
         <div className="flex-1 overflow-auto p-4 flex justify-center items-center  ">
           <div
@@ -1233,8 +1027,8 @@ const KonvaCanvas = ({
               height={canvasSize.height}
               ref={stageRef}
               onClick={handleStageClick}
-              scaleX={zoom}
-              scaleY={zoom}
+              scaleX={scale} // Apply scale to Stage
+              scaleY={scale} // Apply scale to Stage
             >
               <Layer>
                 {/* Render uploaded image */}
@@ -1425,26 +1219,12 @@ const KonvaCanvas = ({
         </div>
 
         {/* Floating Zoom Buttons */}
-        <div className="fixed bottom-4 right-4 flex flex-col space-y-2">
-          <button
-            onClick={handleZoomIn}
-            className="p-3 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 transition-colors"
-          >
-            <ZoomIn size={20} />
-          </button>
-          <button
-            onClick={handleZoomOut}
-            className="p-3 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 transition-colors"
-          >
-            <ZoomOut size={20} />
-          </button>
-          <button
-            onClick={handleZoomReset}
-            className="p-3 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 transition-colors"
-          >
-            <RefreshCw size={20} />
-          </button>
-        </div>
+        <Toolbar
+          stageRef={stageRef}
+          handleZoomIn={handleZoomIn} // Pass handleZoomIn to Toolbar
+          handleZoomOut={handleZoomOut} // Pass handleZoomOut to Toolbar
+          handleResetZoom={handleResetZoom} // Pass handleResetZoom to Toolbar
+        />
 
         {/* Preview Modal */}
         {previewImage && (

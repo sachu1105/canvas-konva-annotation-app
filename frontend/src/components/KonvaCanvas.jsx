@@ -115,6 +115,7 @@ const KonvaCanvas = ({
     }
   };
 
+
   //shapes logics
   const addRectangle = () => {
     const id = Date.now(); // Unique ID for the rectangle
@@ -395,8 +396,13 @@ const KonvaCanvas = ({
     return canvasData;
   };
   
-  const publitio = new PublitioAPI('yPaGnd0aD0y46JoivHpT'
-,'xkLzLb3ifB7xJB0rxzAMrcdt1QLAtzQ9'); // Initialize Publitio
+
+// Access environment variables for publitio API key and secret
+const apiKey = import.meta.env.VITE_PUBLITIO_API_KEY;
+const apiSecret = import.meta.env.VITE_PUBLITIO_API_SECRET;
+
+// Function to save the canvas bg image and objects to Publitio
+const publitio = new PublitioAPI(apiKey, apiSecret);
 
   const saveCanvas = async () => {
     setIsLoading(true); // Set loading state to true

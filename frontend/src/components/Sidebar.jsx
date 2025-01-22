@@ -148,7 +148,7 @@ const ImageEditorSidebar = ({
     <aside
       className={`relative h-screen bg-white transition-all duration-200 shadow-xl ${
         isCollapsed ? "w-20" : "w-80"
-      }`}
+      } sidebar`} // Add 'sidebar' class
       onMouseEnter={() => setIsCollapsed(false)}
       onMouseLeave={() => setIsCollapsed(true)}
     >

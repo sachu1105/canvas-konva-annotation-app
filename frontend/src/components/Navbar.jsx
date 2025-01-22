@@ -10,8 +10,7 @@ import {
   Trash2,
   Save,
   Palette,
-  MoveUp,
-  MoveDown,
+ 
 } from "lucide-react";
 import Select from "react-select";
 
@@ -55,7 +54,7 @@ const Navbar = ({
   moveObjectDown,
 }) => {
   return (
-    <div className="flex justify-between items-center w-full p-4 bg-white shadow-lg z-10">
+    <div className="flex justify-between items-center w-full p-4 bg-white shadow-lg z-10 navbar"> {/* Add 'navbar' class */}
       <div className="flex gap-2 ml-4">
         <button
           onClick={addText}
@@ -185,22 +184,7 @@ const Navbar = ({
           icon={Trash2}
           label="Delete"
         />
-        {selectedObjectId && (
-          <>
-            <ToolbarButton
-              onClick={moveObjectUp}
-              icon={MoveUp}
-              label="Move Forward"
-              disabled={!selectedObjectId}
-            />
-            <ToolbarButton
-              onClick={moveObjectDown}
-              icon={MoveDown}
-              label="Move Backward"
-              disabled={!selectedObjectId}
-            />
-          </>
-        )}
+      
       </div>
     </div>
   );

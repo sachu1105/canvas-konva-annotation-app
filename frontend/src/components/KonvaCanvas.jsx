@@ -4,6 +4,9 @@ import Navbar from "./Navbar"; // Import the Navbar component
 import {Stage,Layer,Image,Rect,Circle,Text,Transformer,Arrow,Star,Line,} from "react-konva";
 import {X} from "lucide-react"; // Add text formatting icons
 import Toolbar from "./Toolbar"; // Import the Toolbar component
+import PublitioAPI from 'publitio_js_sdk'; // Import Publitio SDK
+import { ToastContainer, toast } from 'react-toastify'; // Import ToastContainer and toast
+import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
 
 const KonvaCanvas = ({
   addCustomPlaceholder,
@@ -42,6 +45,7 @@ const KonvaCanvas = ({
   const [textAlign, setTextAlign] = useState("left");
   const [previewImage, setPreviewImage] = useState(null); // State to store the preview image
   const [scale, setScale] = useState(1); // Add state for scale
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
   // Refs for stage (canvas container) and transformer
   const stageRef = useRef(null);
   const transformerRef = useRef(null);
@@ -391,20 +395,38 @@ const KonvaCanvas = ({
     return canvasData;
   };
   
-  const saveCanvas = () => {
+  const publitio = new PublitioAPI('yPaGnd0aD0y46JoivHpT'
+,'xkLzLb3ifB7xJB0rxzAMrcdt1QLAtzQ9'); // Initialize Publitio
+
+  const saveCanvas = async () => {
+    setIsLoading(true); // Set loading state to true
+    toast.info("Saving canvas, please wait..."); // Show toast notification
+
     try {
       const canvasData = serializeCanvasData();
       const stage = stageRef.current;
-      
-      // Create preview image
-      const dataUrl = stage.toDataURL();
-      
+  
+      // Upload background image to Publitio
+      let publitioUrl = null;
+      if (imageUrl) {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        const publitioResponse = await publitio.uploadFile(blob, 'file', {
+          title: `Background_${Date.now()}`,
+          description: 'Background image',
+        });
+        publitioUrl = publitioResponse.url_preview;
+      }
+  
       // Create the save object with timestamp and name
       const saveObject = {
         id: Date.now(),
         name: `Canvas ${new Date().toLocaleString()}`,
-        preview: dataUrl,
-        data: canvasData,
+        preview: publitioUrl, // Use Publitio URL for background image
+        data: {
+          ...canvasData,
+          backgroundImage: publitioUrl, // Save the Publitio URL
+        },
       };
   
       // Update recently saved list
@@ -421,11 +443,13 @@ const KonvaCanvas = ({
       });
   
       // Show success message
-      alert("Canvas saved successfully!");
-      
+      toast.success("Canvas saved successfully!");
+  
     } catch (error) {
       console.error("Error saving canvas:", error);
-      alert("There was an error saving the canvas. Please try again.");
+      toast.error("There was an error saving the canvas. Please try again.");
+    } finally {
+      setIsLoading(false); // Set loading state to false
     }
   };
   
@@ -985,7 +1009,7 @@ const KonvaCanvas = ({
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col bg-[#f7f7f7] overflow-hidden">
+      <div className="flex-1 flex flex-col bg-[#f7f7f7] overflow-hidden main-content"> {/* Add 'main-content' class */}
         <Navbar
           addText={addText}
           handleShapeChange={handleShapeChange}
@@ -1225,12 +1249,11 @@ const KonvaCanvas = ({
           handleZoomOut={handleZoomOut} // Pass handleZoomOut to Toolbar
           handleResetZoom={handleResetZoom} // Pass handleResetZoom to Toolbar
         />
-
-        {/* Preview Modal */}
-        {previewImage && (
+ {/* Preview Modal */}
+ {previewImage && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="relative bg-white p-4 rounded-lg shadow-lg">
-              <img src={previewImage} alt="Preview" className="max-w-full max-h-full" />
+            <div className="relative bg-white p-4 rounded-lg shadow-lg max-w-3xl max-h-3xl">
+              <img src={previewImage} alt="Preview" className="w-auto h-auto max-w-full max-h-full" />
               <button
                 onClick={() => setPreviewImage(null)}
                 className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
@@ -1240,6 +1263,9 @@ const KonvaCanvas = ({
             </div>
           </div>
         )}
+
+        {/* Toast Container */}
+        <ToastContainer />
       </div>
     </div>
   );

@@ -1,0 +1,19 @@
+.sidebar {
+  transition: width 0.2s;
+}
+
+.navbar {
+  transition: margin-left 0.2s;
+}
+
+.main-content {
+  transition: margin-left 0.2s;
+}
+
+.sidebar.w-20 + .main-content {
+  margin-left: 5rem; /* Adjust based on collapsed sidebar width */
+}
+
+.sidebar.w-80 + .main-content {
+  margin-left: 20rem; /* Adjust based on expanded sidebar width */
+}

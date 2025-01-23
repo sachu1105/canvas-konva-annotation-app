@@ -68,8 +68,8 @@ const ImageEditorSidebar = ({
   };
 
   const predefinedSizes = {
-    A4Landscape: { width: 297 *2, height: 210*2 },
-    A4Portrait: { width: 210 *2, height: 297 *2 },
+    A4Landscape: { width: 297*2.5, height: 210*2.5 },
+    A4Portrait: { width: 210, height: 297 },
     LetterLandscape: { width: 279, height: 216 },
     LetterPortrait: { width: 216, height: 279 },
     LegalLandscape: { width: 356, height: 216 },

@@ -50,12 +50,10 @@ const Navbar = ({
   deleteAnnotation,
   historyIndex,
   history,
-  moveObjectUp,
-  moveObjectDown,
 }) => {
   return (
-    <div className="flex justify-between items-center w-full p-4 bg-white shadow-lg z-10 navbar"> {/* Add 'navbar' class */}
-      <div className="flex gap-2 ml-4">
+    <div className="flex flex-wrap justify-between items-center w-full p-4 bg-white shadow-lg z-10 navbar"> {/* Add 'flex-wrap' class */}
+      <div className="flex flex-wrap gap-2 ml-4">
         <button
           onClick={addText}
           className="py-2 px-4 border text-sm border-gray-500 text-grey-800 rounded-lg hover:bg-gray-100 transition-colors"
@@ -89,7 +87,7 @@ const Navbar = ({
 
       {selectedObjectId !== null &&
         objects.find((obj) => obj.id === selectedObjectId)?.type === "text" && (
-          <div className="flex gap-2 mr-8 ml-4">
+          <div className="flex flex-wrap gap-2 mr-8 ml-4">
             <button
               onClick={() => handleTextFormatting("bold")}
               className={`py-2 px-4 border ${
@@ -164,7 +162,7 @@ const Navbar = ({
           </div>
         )}
 
-      <div className="flex gap-2 ml-auto">
+      <div className="flex flex-wrap gap-2 ml-auto">
         <ToolbarButton onClick={saveCanvas} icon={Save} label="Save" />
         <ToolbarButton
           onClick={undo}

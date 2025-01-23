@@ -3,7 +3,6 @@ import ImageEditorSidebar from "./Sidebar";
 import Navbar from "./Navbar"; // Import the Navbar component
 import {Stage,Layer,Image,Rect,Circle,Text,Transformer,Arrow,Star,Line,} from "react-konva";
 import {X} from "lucide-react"; // Add text formatting icons
-import Toolbar from "./Toolbar"; // Import the Toolbar component
 import PublitioAPI from 'publitio_js_sdk'; // Import Publitio SDK
 import { ToastContainer, toast } from 'react-toastify'; // Import ToastContainer and toast
 import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
@@ -46,6 +45,12 @@ const KonvaCanvas = ({
   const [previewImage, setPreviewImage] = useState(null); // State to store the preview image
   const [scale, setScale] = useState(1); // Add state for scale
   const [isLoading, setIsLoading] = useState(false); // Add loading state
+  const [ox, setOx] = useState(0);
+  const [oy, setOy] = useState(0);
+  const [px, setPx] = useState(0);
+  const [py, setPy] = useState(0);
+  const [scx, setScx] = useState(1);
+  const [scy, setScy] = useState(1);
   // Refs for stage (canvas container) and transformer
   const stageRef = useRef(null);
   const transformerRef = useRef(null);
@@ -62,6 +67,7 @@ const KonvaCanvas = ({
       setImage(null); // Ensure the image is cleared from state
     }
   }, [imageUrl]);
+
 
   // Remove the main image
   const handleRemoveMainImage = () => {
@@ -397,6 +403,8 @@ const KonvaCanvas = ({
   };
   
 
+
+
 // Access environment variables for publitio API key and secret
 const apiKey = import.meta.env.VITE_PUBLITIO_API_KEY;
 const apiSecret = import.meta.env.VITE_PUBLITIO_API_SECRET;
@@ -560,16 +568,18 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
   };
 
   const downloadCanvas = () => {
-    const uri = stageRef.current.toDataURL();
+    const stage = stageRef.current;
+    const dataURL = stage.toDataURL({ pixelRatio: 2 }); // Increase pixel ratio for better quality
     const link = document.createElement("a");
     link.download = "canvas-image.png";
-    link.href = uri;
+    link.href = dataURL;
     link.click();
   };
 
   // Resize canvas
   const handleCanvasResize = (newWidth, newHeight) => {
     setCanvasSize({ width: newWidth, height: newHeight });
+    setScale(1); // Reset scale to default when resizing canvas
   };
 
   // Function to handle color change
@@ -971,6 +981,58 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
     };
   }, [textEditing, selectedObjectId, objects]);
 
+  const handleMouseDown = (e) => {
+    setPx(e.evt.x);
+    setPy(e.evt.y);
+    stageRef.current.on("mousemove", handleMouseMove);
+  };
+
+  const handleMouseMove = (e) => {
+    setOx((prevOx) => prevOx - (e.evt.x - px));
+    setOy((prevOy) => prevOy - (e.evt.y - py));
+    setPx(e.evt.x);
+    setPy(e.evt.y);
+  };
+
+  const handleMouseUp = () => {
+    stageRef.current.off("mousemove", handleMouseMove);
+  };
+
+  const handleWheel = (e) => {
+    e.evt.preventDefault();
+    const stage = stageRef.current;
+    const oldScale = stage.scaleX();
+  
+    const pointer = stage.getPointerPosition();
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
+  
+    const newScale = e.evt.deltaY > 0 ? oldScale * 1.1 : oldScale / 1.1;
+    stage.scale({ x: newScale, y: newScale });
+  
+    const newPos = {
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
+    };
+    stage.position(newPos);
+    stage.batchDraw();
+  };
+  
+
+  const WtoS = (wx, wy) => {
+    let sx = (wx - ox) * scx;
+    let sy = (wy - oy) * scy;
+    return [sx, sy];
+  };
+
+  const StoW = (sx, sy) => {
+    let wx = sx / scx + ox;
+    let wy = sy / scy + oy;
+    return [wx, wy];
+  };
+
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
@@ -1049,7 +1111,8 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
             style={{
               width: canvasSize.width,
               height: canvasSize.height,
-              ...getCanvasStyle(),
+              transform: `scale(${scx}, ${scy})`,
+              transformOrigin: "center center",
             }}
           >
             <Stage
@@ -1057,6 +1120,9 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
               height={canvasSize.height}
               ref={stageRef}
               onClick={handleStageClick}
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseUp}
+              onWheel={handleWheel}
               scaleX={scale} // Apply scale to Stage
               scaleY={scale} // Apply scale to Stage
             >
@@ -1248,13 +1314,7 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
           </div>
         </div>
 
-        {/* Floating Zoom Buttons */}
-        <Toolbar
-          stageRef={stageRef}
-          handleZoomIn={handleZoomIn} // Pass handleZoomIn to Toolbar
-          handleZoomOut={handleZoomOut} // Pass handleZoomOut to Toolbar
-          handleResetZoom={handleResetZoom} // Pass handleResetZoom to Toolbar
-        />
+    
  {/* Preview Modal */}
  {previewImage && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">

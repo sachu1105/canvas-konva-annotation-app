@@ -1,11 +1,22 @@
 import React, { useState, useRef, useEffect } from "react";
-import ImageEditorSidebar from "./Sidebar";
-import Navbar from "./Navbar"; // Import the Navbar component
-import {Stage,Layer,Image,Rect,Circle,Text,Transformer,Arrow,Star,Line,} from "react-konva";
-import {X} from "lucide-react"; // Add text formatting icons
-import PublitioAPI from 'publitio_js_sdk'; // Import Publitio SDK
-import { ToastContainer, toast } from 'react-toastify'; // Import ToastContainer and toast
-import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
+import ImageEditorSidebar from "./components/Sidebar";
+import Navbar from "./components/Navbar"; // Import the Navbar component
+import {
+  Stage,
+  Layer,
+  Image,
+  Rect,
+  Circle,
+  Text,
+  Transformer,
+  Arrow,
+  Star,
+  Line,
+} from "react-konva";
+import { X } from "lucide-react"; // Add text formatting icons
+import PublitioAPI from "publitio_js_sdk"; // Import Publitio SDK
+import { ToastContainer, toast } from "react-toastify"; // Import ToastContainer and toast
+import "react-toastify/dist/ReactToastify.css"; // Import Toastify CSS
 
 const KonvaCanvas = ({
   addCustomPlaceholder,
@@ -68,20 +79,19 @@ const KonvaCanvas = ({
     }
   }, [imageUrl]);
 
-
   // Remove the main image
   const handleRemoveMainImage = () => {
     setImageUrl(null);
     localStorage.removeItem("imageUrl"); // Clears the image URL from localStorage
   };
 
-  // Handle file upload and set the image URL
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file && file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImageUrl(reader.result);
+        localStorage.setItem("imageUrl", reader.result); // Persist in localStorage
       };
       reader.readAsDataURL(file);
     }
@@ -120,7 +130,6 @@ const KonvaCanvas = ({
       setObjects(history[historyIndex + 1]);
     }
   };
-
 
   //shapes logics
   const addRectangle = () => {
@@ -310,29 +319,46 @@ const KonvaCanvas = ({
   // Add this function to serialize canvas data
   const serializeCanvasData = () => {
     const stage = stageRef.current;
-    
+
     // Helper function to clean object attributes
     const cleanAttrs = (attrs) => {
       const cleanedAttrs = {};
       // Only copy serializable properties
       const serializableProps = [
-        'x', 'y', 'width', 'height', 'radius', 
-        'scaleX', 'scaleY', 'rotation', 'text',
-        'fontSize', 'fontFamily', 'fill', 'stroke',
-        'strokeWidth', 'align', 'verticalAlign',
-        'points', 'pointerLength', 'pointerWidth',
-        'numPoints', 'innerRadius', 'outerRadius',
-        'textDecoration', 'fontStyle'
+        "x",
+        "y",
+        "width",
+        "height",
+        "radius",
+        "scaleX",
+        "scaleY",
+        "rotation",
+        "text",
+        "fontSize",
+        "fontFamily",
+        "fill",
+        "stroke",
+        "strokeWidth",
+        "align",
+        "verticalAlign",
+        "points",
+        "pointerLength",
+        "pointerWidth",
+        "numPoints",
+        "innerRadius",
+        "outerRadius",
+        "textDecoration",
+        "fontStyle",
       ];
-  
-      serializableProps.forEach(prop => {
+
+      serializableProps.forEach((prop) => {
         if (attrs[prop] !== undefined) {
           cleanedAttrs[prop] = attrs[prop];
         }
       });
       return cleanedAttrs;
     };
-  
+
     const canvasData = {
       version: "1.0",
       timestamp: new Date().toISOString(),
@@ -341,11 +367,11 @@ const KonvaCanvas = ({
         height: canvasSize.height,
       },
       backgroundImage: imageUrl,
-      objects: objects.map(obj => {
+      objects: objects.map((obj) => {
         // Get the actual node
         const node = obj.ref.current;
         let attrs = {};
-  
+
         if (node) {
           // Get current transformation values using Konva methods
           attrs = {
@@ -356,61 +382,58 @@ const KonvaCanvas = ({
             scaleY: node.scaleY(),
             rotation: node.rotation(),
             // For text specific properties
-            ...(obj.type === 'text' && {
+            ...(obj.type === "text" && {
               text: node.text(),
               fontSize: node.fontSize(),
               fontFamily: node.fontFamily(),
               align: node.align(),
               fontStyle: node.fontStyle(),
-              textDecoration: node.textDecoration()
+              textDecoration: node.textDecoration(),
             }),
             // For shapes specific properties
-            ...(obj.type === 'rect' && {
+            ...(obj.type === "rect" && {
               width: node.width(),
-              height: node.height()
+              height: node.height(),
             }),
-            ...(obj.type === 'circle' && {
-              radius: node.radius()
+            ...(obj.type === "circle" && {
+              radius: node.radius(),
             }),
             // For line and arrow
-            ...((['line', 'arrow'].includes(obj.type)) && {
-              points: node.points()
+            ...(["line", "arrow"].includes(obj.type) && {
+              points: node.points(),
             }),
             // For star
-            ...(obj.type === 'star' && {
+            ...(obj.type === "star" && {
               innerRadius: node.innerRadius(),
               outerRadius: node.outerRadius(),
-              numPoints: node.numPoints()
+              numPoints: node.numPoints(),
             }),
             // For images, store the data URL
-            ...(obj.type === 'image' && {
-              imageData: node.image().src // Store the image source
-            })
+            ...(obj.type === "image" && {
+              imageData: node.image().src, // Store the image source
+            }),
           };
         } else {
           attrs = cleanAttrs(obj.attrs);
         }
-  
+
         return {
           id: obj.id,
           type: obj.type,
-          attrs: attrs
+          attrs: attrs,
         };
-      })
+      }),
     };
-  
+
     return canvasData;
   };
-  
 
+  // Access environment variables for publitio API key and secret
+  const apiKey = import.meta.env.VITE_PUBLITIO_API_KEY;
+  const apiSecret = import.meta.env.VITE_PUBLITIO_API_SECRET;
 
-
-// Access environment variables for publitio API key and secret
-const apiKey = import.meta.env.VITE_PUBLITIO_API_KEY;
-const apiSecret = import.meta.env.VITE_PUBLITIO_API_SECRET;
-
-// Function to save the canvas bg image and objects to Publitio
-const publitio = new PublitioAPI(apiKey, apiSecret);
+  // Function to save the canvas bg image and objects to Publitio
+  const publitio = new PublitioAPI(apiKey, apiSecret);
 
   const saveCanvas = async () => {
     setIsLoading(true); // Set loading state to true
@@ -419,19 +442,19 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
     try {
       const canvasData = serializeCanvasData();
       const stage = stageRef.current;
-  
+
       // Upload background image to Publitio
       let publitioUrl = null;
       if (imageUrl) {
         const response = await fetch(imageUrl);
         const blob = await response.blob();
-        const publitioResponse = await publitio.uploadFile(blob, 'file', {
+        const publitioResponse = await publitio.uploadFile(blob, "file", {
           title: `Background_${Date.now()}`,
-          description: 'Background image',
+          description: "Background image",
         });
         publitioUrl = publitioResponse.url_preview;
       }
-  
+
       // Create the save object with timestamp and name
       const saveObject = {
         id: Date.now(),
@@ -442,23 +465,27 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
           backgroundImage: publitioUrl, // Save the Publitio URL
         },
       };
-  
+
       // Update recently saved list
-      setRecentlySaved(prev => {
+      setRecentlySaved((prev) => {
         const updatedList = [...prev, saveObject];
         // Save to localStorage
         try {
-          localStorage.setItem("recentlySavedCanvases", JSON.stringify(updatedList));
+          localStorage.setItem(
+            "recentlySavedCanvases",
+            JSON.stringify(updatedList)
+          );
         } catch (e) {
           console.error("Error saving to localStorage:", e);
-          alert("Error saving to localStorage. Make sure you have enough storage space.");
+          alert(
+            "Error saving to localStorage. Make sure you have enough storage space."
+          );
         }
         return updatedList;
       });
-  
+
       // Show success message
       toast.success("Canvas saved successfully!");
-  
     } catch (error) {
       console.error("Error saving canvas:", error);
       toast.error("There was an error saving the canvas. Please try again.");
@@ -466,31 +493,31 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
       setIsLoading(false); // Set loading state to false
     }
   };
-  
+
   // Add a function to load saved canvas data
   const loadCanvasData = (savedData) => {
     if (!savedData || !savedData.data) return;
-    
+
     const data = savedData.data;
-    
+
     try {
       // Set canvas size
       setCanvasSize(data.canvasSize);
-      
+
       // Set background image if exists
       if (data.backgroundImage) {
         setImageUrl(data.backgroundImage);
       }
-      
+
       // Create new objects with refs and restore all properties
-      const newObjects = data.objects.map(obj => {
+      const newObjects = data.objects.map((obj) => {
         const ref = React.createRef();
-        
+
         // Handle image objects specially
-        if (obj.type === 'image' && obj.attrs.imageData) {
+        if (obj.type === "image" && obj.attrs.imageData) {
           const img = new window.Image();
           img.src = obj.attrs.imageData;
-          
+
           return {
             ...obj,
             ref,
@@ -498,55 +525,57 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
               ...obj.attrs,
               image: img,
               draggable: true,
-            }
+            },
           };
         }
-        
+
         return {
           ...obj,
           ref,
           attrs: {
             ...obj.attrs,
             draggable: true,
-          }
+          },
         };
       });
-      
+
       // Wait for all images to load before setting objects
       const imagePromises = newObjects
-        .filter(obj => obj.type === 'image')
-        .map(obj => {
+        .filter((obj) => obj.type === "image")
+        .map((obj) => {
           return new Promise((resolve) => {
             obj.attrs.image.onload = () => resolve();
           });
         });
-  
+
       Promise.all(imagePromises).then(() => {
         setObjects(newObjects);
         addToHistory(newObjects);
       });
-      
+
       setSelectedObjectId(null);
-      
     } catch (error) {
       console.error("Error loading canvas:", error);
       alert("There was an error loading the canvas.");
     }
   };
-  
 
   // Function to delete a saved canvas from recently saved and local storage
   const deleteSavedCanvas = (index) => {
     setRecentlySaved((prev) => {
       const updatedList = prev.filter((_, i) => i !== index);
-      localStorage.setItem("recentlySavedCanvases", JSON.stringify(updatedList)); // Update local storage
+      localStorage.setItem(
+        "recentlySavedCanvases",
+        JSON.stringify(updatedList)
+      ); // Update local storage
       return updatedList;
     });
   };
 
   // Retrieve saved canvases from local storage when the component mounts
   useEffect(() => {
-    const savedCanvases = JSON.parse(localStorage.getItem("recentlySavedCanvases")) || [];
+    const savedCanvases =
+      JSON.parse(localStorage.getItem("recentlySavedCanvases")) || [];
     setRecentlySaved(savedCanvases); // Load saved canvases into state
   }, []);
 
@@ -554,7 +583,7 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
   const previewSavedCanvas = (savedCanvas) => {
     setPreviewImage(savedCanvas.preview);
     // Add button or functionality to load this canvas
-    if (window.confirm('Would you like to load this canvas?')) {
+    if (window.confirm("Would you like to load this canvas?")) {
       loadCanvasData(savedCanvas);
       setPreviewImage(null);
     }
@@ -682,7 +711,8 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
       (obj) => obj.id === id && obj.type === "text"
     );
     if (selectedText) {
-      const { x, y, width, text, fontSize, fontFamily, fill } = selectedText.attrs;
+      const { x, y, width, text, fontSize, fontFamily, fill } =
+        selectedText.attrs;
       setTextEditing({
         id,
         value: text,
@@ -695,7 +725,9 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
       });
       setObjects((prevObjects) =>
         prevObjects.map((obj) =>
-          obj.id === id ? { ...obj, attrs: { ...obj.attrs, visible: false } } : obj
+          obj.id === id
+            ? { ...obj, attrs: { ...obj.attrs, visible: false } }
+            : obj
         )
       );
     }
@@ -878,33 +910,12 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
     }
   }, [selectedTemplate]);
 
-  // Function to handle zoom in
-  const handleZoomIn = () => {
-    setScale((prevScale) => Math.min(prevScale + 0.1, 3)); // Limit max zoom level
-  };
-
-  // Function to handle zoom out
-  const handleZoomOut = () => {
-    setScale((prevScale) => Math.max(prevScale - 0.1, 0.5)); // Limit min zoom level
-  };
-
-  // Function to handle reset zoom
-  const handleResetZoom = () => {
-    setScale(1); // Reset zoom level to default
-  };
-
-  // Adjust canvas size and position to stay centered
-  const getCanvasStyle = () => {
-    return {
-      transform: `scale(${scale})`,
-      transformOrigin: "center center",
-    };
-  };
-
   // Add these layer management functions
   const moveObjectUp = () => {
     if (selectedObjectId) {
-      const currentIndex = objects.findIndex(obj => obj.id === selectedObjectId);
+      const currentIndex = objects.findIndex(
+        (obj) => obj.id === selectedObjectId
+      );
       if (currentIndex < objects.length - 1) {
         const newObjects = [...objects];
         const temp = newObjects[currentIndex];
@@ -918,7 +929,9 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
 
   const moveObjectDown = () => {
     if (selectedObjectId) {
-      const currentIndex = objects.findIndex(obj => obj.id === selectedObjectId);
+      const currentIndex = objects.findIndex(
+        (obj) => obj.id === selectedObjectId
+      );
       if (currentIndex > 0) {
         const newObjects = [...objects];
         const temp = newObjects[currentIndex];
@@ -1002,35 +1015,22 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
     e.evt.preventDefault();
     const stage = stageRef.current;
     const oldScale = stage.scaleX();
-  
+
     const pointer = stage.getPointerPosition();
     const mousePointTo = {
       x: (pointer.x - stage.x()) / oldScale,
       y: (pointer.y - stage.y()) / oldScale,
     };
-  
+
     const newScale = e.evt.deltaY > 0 ? oldScale * 1.1 : oldScale / 1.1;
     stage.scale({ x: newScale, y: newScale });
-  
+
     const newPos = {
       x: pointer.x - mousePointTo.x * newScale,
       y: pointer.y - mousePointTo.y * newScale,
     };
     stage.position(newPos);
     stage.batchDraw();
-  };
-  
-
-  const WtoS = (wx, wy) => {
-    let sx = (wx - ox) * scx;
-    let sy = (wy - oy) * scy;
-    return [sx, sy];
-  };
-
-  const StoW = (sx, sy) => {
-    let wx = sx / scx + ox;
-    let wy = sy / scy + oy;
-    return [wx, wy];
   };
 
   return (
@@ -1069,15 +1069,17 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
         handleTemplateLoad={loadTemplate} // Pass loadTemplate as a prop
         deleteSavedCanvas={deleteSavedCanvas} // Pass deleteSavedCanvas as a prop
         previewSavedCanvas={previewSavedCanvas} // Pass previewSavedCanvas as a prop
-        objects={objects}  // Add this prop
-        selectedObjectId={selectedObjectId}  // Add this prop
-        setSelectedObjectId={setSelectedObjectId}  // Add this prop
-        moveObjectUp={moveObjectUp}  // Add this prop
-        moveObjectDown={moveObjectDown}  // Add this prop
+        objects={objects} // Add this prop
+        selectedObjectId={selectedObjectId} // Add this prop
+        setSelectedObjectId={setSelectedObjectId} // Add this prop
+        moveObjectUp={moveObjectUp} // Add this prop
+        moveObjectDown={moveObjectDown} // Add this prop
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col bg-[#f7f7f7] overflow-hidden main-content"> {/* Add 'main-content' class */}
+      <div className="flex-1 flex flex-col bg-[#f7f7f7] overflow-hidden main-content">
+        {" "}
+        {/* Add 'main-content' class */}
         <Navbar
           addText={addText}
           handleShapeChange={handleShapeChange}
@@ -1104,7 +1106,6 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
           moveObjectUp={moveObjectUp}
           moveObjectDown={moveObjectDown}
         />
-
         <div className="flex-1 overflow-auto p-4 flex justify-center items-center  ">
           <div
             className="relative bg-white shadow-xl rounded"
@@ -1248,7 +1249,9 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
                           // Add special styling for placeholders
                           fill={obj.isPlaceholder ? "#FF5722" : obj.attrs.fill}
                           padding={obj.isPlaceholder ? 5 : 0}
-                          background={obj.isPlaceholder ? "#FBE9E7" : "transparent"}
+                          background={
+                            obj.isPlaceholder ? "#FBE9E7" : "transparent"
+                          }
                           stroke={obj.isPlaceholder ? "#FF5722" : "transparent"}
                           strokeWidth={obj.isPlaceholder ? 1 : 0}
                           cornerRadius={obj.isPlaceholder ? 5 : 0}
@@ -1264,11 +1267,22 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
                 {selectedObjectId !== null && (
                   <Transformer
                     ref={transformerRef}
-                    node={objects.find((obj) => obj.id === selectedObjectId)?.ref.current}
+                    node={
+                      objects.find((obj) => obj.id === selectedObjectId)?.ref
+                        .current
+                    }
                     enabledAnchors={
-                      objects.find((obj) => obj.id === selectedObjectId)?.type === 'text'
+                      objects.find((obj) => obj.id === selectedObjectId)
+                        ?.type === "text"
                         ? ["middle-left", "middle-right"] // Only middle anchors for text
-                        : ["top-left", "top-right", "bottom-left", "bottom-right", "middle-left", "middle-right"] // All anchors for other objects
+                        : [
+                            "top-left",
+                            "top-right",
+                            "bottom-left",
+                            "bottom-right",
+                            "middle-left",
+                            "middle-right",
+                          ] // All anchors for other objects
                     }
                     anchorSize={8}
                     anchorStroke="black"
@@ -1313,13 +1327,15 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
             )}
           </div>
         </div>
-
-    
- {/* Preview Modal */}
- {previewImage && (
+        {/* Preview Modal */}
+        {previewImage && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="relative bg-white p-4 rounded-lg shadow-lg max-w-3xl max-h-3xl">
-              <img src={previewImage} alt="Preview" className="w-auto h-auto max-w-full max-h-full" />
+              <img
+                src={previewImage}
+                alt="Preview"
+                className="w-auto h-auto max-w-full max-h-full"
+              />
               <button
                 onClick={() => setPreviewImage(null)}
                 className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
@@ -1329,7 +1345,6 @@ const publitio = new PublitioAPI(apiKey, apiSecret);
             </div>
           </div>
         )}
-
         {/* Toast Container */}
         <ToastContainer />
       </div>

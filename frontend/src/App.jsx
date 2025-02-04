@@ -1,14 +1,13 @@
-import KonvaCanvas from "./components/KonvaCanvas";
+import KonvaCanvas from "./KonvaCanvas";
 import { useState } from "react";
-import templates from './templates.json'; // Import templates JSON
+import templates from "./templates.json"; // Import templates JSON
 
 function App() {
   const [customPlaceholders, setCustomPlaceholders] = useState([]);
-  const [activeSection, setActiveSection] = useState('upload'); // Add this state
+  const [activeSection, setActiveSection] = useState("upload"); // Add this state
   const [selectedTemplate, setSelectedTemplate] = useState(null); // State to store the selected template
   const [previewImage, setPreviewImage] = useState(null); // State to store the preview image
-  console.log(templates)
-
+  console.log(templates);
 
   const addCustomPlaceholder = (placeholder) => {
     setCustomPlaceholders((prev) => [...prev, `{${placeholder}}`]);
@@ -27,7 +26,6 @@ function App() {
   };
 
   console.log(templates);
-
 
   return (
     <div className="font-poppins">
